@@ -11,7 +11,7 @@ from collections import Counter
 from pathlib import Path
 
 
-REQUIRED = {"word", "phonetic", "pos", "meaning", "collocation", "etymology", "example_en", "example_zh"}
+REQUIRED = {"word", "phonetic", "pos", "meaning", "collocation", "etymology", "etymology_source", "etymology_license", "example_en", "example_zh"}
 GENERIC_PATTERNS = {
     "meaning": re.compile(r"^(常用核心词|核心常用词|高频日常核心词|日常核心词|核心高频词)$"),
     "collocation": re.compile(r"^(use|apply|take)\s+", re.I),
@@ -37,6 +37,7 @@ def audit(path: Path) -> dict:
         "coverage": {},
         "generic": {},
         "fake_phonetic": 0,
+        "provenance_mismatches": 0,
     }
     for field in REQUIRED - {"word"}:
         result["coverage"][field] = round(sum(bool(row.get(field, "").strip()) for row in rows) / max(1, len(rows)), 4)
@@ -46,7 +47,12 @@ def audit(path: Path) -> dict:
         row.get("phonetic", "").strip("/[] ").casefold() == row.get("word", "").strip().casefold()
         for row in rows
     )
-    result["critical_ok"] = not result["missing_columns"] and not result["empty_words"] and not result["duplicate_words"]
+    result["provenance_mismatches"] = sum(
+        bool(row.get("etymology", "").strip())
+        != bool(row.get("etymology_source", "").strip() and row.get("etymology_license", "").strip())
+        for row in rows
+    )
+    result["critical_ok"] = not result["missing_columns"] and not result["empty_words"] and not result["duplicate_words"] and not result["provenance_mismatches"]
     return result
 
 
@@ -63,6 +69,7 @@ def main() -> int:
             print(f"{report['file']}: {report['rows']} rows")
             print(f"  missing columns: {report['missing_columns'] or 'none'}")
             print(f"  duplicates: {report['duplicate_words']}; fake phonetics: {report['fake_phonetic']}")
+            print(f"  provenance mismatches: {report['provenance_mismatches']}")
             print(f"  coverage: {report['coverage']}")
             print(f"  generic templates: {report['generic']}")
     return 0 if all(report["critical_ok"] for report in reports) else 1

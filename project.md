@@ -7,7 +7,7 @@
 | 文件 | 用途 |
 | --- | --- |
 | `vocab_coach.html` | 完整的单文件学习应用 |
-| `us_core_7000_authentic.csv` | 从 ECDICT 当代语料频率字段筛选的 7000 词英汉词库 |
+| `us_core_7000_authentic.csv` | 20,000 词正式数据文件；历史文件名为兼容旧版一键更新而保留 |
 | `启动英语词汇学习.command` | macOS 双击启动入口 |
 | `启动英语词汇学习.bat` | Windows 双击启动入口 |
 | `更新英语词汇学习.command` | macOS 一键拉取最新版 |
@@ -16,6 +16,7 @@
 | `start_vocab.py` | 自动启动本地服务器并打开浏览器 |
 | `build_authentic_7000.py` | 从 ECDICT 重新构建可信核心词库 |
 | `apply_cefr_levels.py` | 从 American Oxford 3000/5000 PDF 添加 CEFR 学习难度 |
+| `enrich_wiktionary_etymology.py` | 流式筛选 Wiktextract 数据并补充可溯源词源 |
 | `audit_vocabulary.py` | 检查 CSV 结构、覆盖率、重复词和模板化伪数据 |
 
 ## 启动
@@ -28,7 +29,7 @@ python3 start_vocab.py
 
 启动器会自动选择可用端口并打开浏览器，按回车键或 `Ctrl+C` 停止。
 
-通过 HTTP 打开时，应用会在首次使用时自动读取同目录的 `us_core_7000_authentic.csv`。直接双击 HTML 也可以运行，但部分浏览器会阻止页面读取相邻文件，此时点击“导入词库”并手动选择 CSV。
+通过 HTTP 打开时，应用会在首次使用时自动读取同目录的 `us_core_7000_authentic.csv`。旧版 7,000 词用户会自动迁移到 20,000 词：已有卡片只更新词典元数据，调度状态保持不变，再追加 13,000 张新卡。直接双击 HTML 也可以运行，但部分浏览器会阻止页面读取相邻文件，此时点击“导入词库”并手动选择 CSV。
 
 ## 学习流程
 
@@ -79,14 +80,14 @@ python3 start_vocab.py
 - “备份进度”导出 JSON，其中包含完整词库、逐卡调度状态、设置和每日统计。
 - 导入该 JSON 可以恢复到另一台设备或另一个浏览器。
 
-使用 IndexedDB 是必要的。将 7000 条完整词条连同调度状态写入 LocalStorage 容易超过浏览器容量限制，也不适合频繁的逐卡更新。
+使用 IndexedDB 是必要的。将 20,000 条完整词条连同调度状态写入 LocalStorage 会超过常见容量限制，也不适合频繁的逐卡更新。
 
 ## CSV 格式
 
 文件使用 UTF-8 with BOM，标准表头如下：
 
 ```csv
-word,base_word,phonetic,pos,meaning,level,collocation,etymology,example_en,example_zh
+word,base_word,phonetic,pos,meaning,level,collocation,etymology,etymology_source,etymology_license,example_en,example_zh
 ```
 
 应用的解析器支持 RFC 4180 常用格式，包括：
@@ -104,15 +105,16 @@ word,base_word,phonetic,pos,meaning,level,collocation,etymology,example_en,examp
 
 ## 词库质量策略
 
-默认词库来自开源 ECDICT。构建器按 `frq` 当代语料频率顺序选出 7000 个合法英文词条，并使用 ECDICT 提供的 `phonetic`、`translation` 与 `pos`。只有词典释义明确写出 `vt.` 或 `vi.` 时才保留及物性标记；没有依据时只标为 `v.`，不会猜测。
+默认词库的词频、音标、词性和中文释义来自开源 ECDICT。构建器按 `frq` 当代语料频率顺序选出 20,000 个合法英文词条。只有词典释义明确写出 `vt.` 或 `vi.` 时才保留及物性标记；没有依据时只标为 `v.`，不会猜测。
 
-ECDICT 不稳定提供搭配、词源和双语例句，因此这些字段保持为空。准确的空值优于流畅的伪数据。
+词源来自 English Wiktionary，经 Wiktextract/Kaikki 转换为 JSONL。构建器流式扫描远程数据，只解析目标词，清理词源树展示噪声、去重并限制单段长度。每个非空词源同时保存原始页面和 `CC BY-SA 4.0` 许可证。ECDICT 不稳定提供搭配和双语例句，因此这些字段仍保持为空；准确的空值优于流畅的伪数据。
 
 重新构建：
 
 ```bash
 python3 build_authentic_7000.py
 python3 apply_cefr_levels.py
+python3 enrich_wiktionary_etymology.py
 ```
 
 若需要保留另一个 CSV 的词序，可显式传入：
@@ -131,7 +133,7 @@ python3 audit_vocabulary.py us_core_7000_authentic.csv
 
 审计内容包括：
 
-- 必需的 8 个学习字段，以及可选的 `base_word` 和 `level` 元数据；
+- 学习字段、`base_word`、`level` 及词源来源和许可证；
 - 空单词与重复单词；
 - 每个字段的有效覆盖率；
 - 音标是否只是原词加斜杠；
@@ -139,12 +141,14 @@ python3 audit_vocabulary.py us_core_7000_authentic.csv
 
 当前默认词库的构建结果：
 
-- 7000 行，无重复词；
+- 20,000 行，无重复词；
 - 中文释义覆盖率 100%；
-- 音标覆盖率约 98.2%；
-- 词性覆盖率约 85.7%；
-- 5059 个词直接或通过基础词匹配 Oxford A1-C1；
-- 未填充任何模板化搭配、词源或例句。
+- 音标覆盖率约 95.0%；
+- 词性覆盖率约 77.4%；
+- 6,235 个词直接或通过基础词匹配 Oxford A1-C1；
+- Wiktionary 词源覆盖 18,358 个词，约 91.8%；
+- 所有非空词源均附来源页面和许可证；
+- 未填充任何模板化搭配或例句。
 
 ## 浏览器兼容性
 
@@ -164,7 +168,7 @@ python3 audit_vocabulary.py us_core_7000_authentic.csv
 
 ```bash
 node -e "/* 提取并编译 HTML 内联脚本 */"
-python3 -m py_compile build_authentic_7000.py apply_cefr_levels.py audit_vocabulary.py
+python3 -m py_compile build_authentic_7000.py apply_cefr_levels.py enrich_wiktionary_etymology.py audit_vocabulary.py
 python3 audit_vocabulary.py us_core_7000_authentic.csv
 ```
 

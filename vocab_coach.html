@@ -28,7 +28,7 @@
     .app { width: min(1100px, 100%); min-height: 100dvh; margin: 0 auto; padding: 24px; display: grid; grid-template-rows: auto 1fr auto; gap: 20px; }
     .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
     .brand { display: flex; align-items: baseline; gap: 12px; }
-    .brand h1 { margin: 0; font-size: 22px; letter-spacing: -.04em; }
+    .brand h1 { margin: 0; font-size: 22px; letter-spacing: -.04em; white-space: nowrap; }
     .brand span { color: var(--muted); font-size: 13px; }
     .top-actions, .footer-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
     .quiet-button, .primary-button { min-height: 40px; border-radius: 10px; padding: 8px 13px; cursor: pointer; transition: transform .15s ease, background .15s ease, border-color .15s ease; }
@@ -68,11 +68,12 @@
     .audio-button { min-height: 38px; padding: 7px 11px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); cursor: pointer; }
     .meaning-row { font-size: 18px; line-height: 1.7; }
     .pos { display: inline-block; margin-right: 9px; color: var(--accent); font-weight: 800; }
-    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .detail-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
     .detail { padding: 15px 16px; background: var(--surface-2); border-radius: 10px; }
     .detail h3 { margin: 0 0 7px; font-size: 12px; color: var(--muted); letter-spacing: .05em; }
     .detail p { margin: 0; line-height: 1.6; font-size: 14px; white-space: pre-line; }
     .detail .missing { color: var(--muted); font-style: italic; }
+    .source-link { display: inline-block; margin-top: 9px; color: var(--accent); font-size: 12px; text-underline-offset: 3px; }
     .example { grid-column: 1 / -1; }
     .example-en { font-size: 16px !important; }
     .example-zh { margin-top: 6px !important; color: var(--muted); }
@@ -170,7 +171,7 @@
             <div class="meaning-row"><span class="pos" id="back-pos"></span><span id="back-meaning"></span></div>
             <div class="detail-grid">
               <section class="detail"><h3>常用搭配</h3><p id="back-collocation"></p></section>
-              <section class="detail"><h3>词源与构词</h3><p id="back-etymology"></p></section>
+              <section class="detail"><h3>词源与构词</h3><p id="back-etymology"></p><a class="source-link" id="back-etymology-source" target="_blank" rel="noreferrer" hidden>查看 Wiktionary 来源</a></section>
               <section class="detail example"><h3>语境例句</h3><p class="example-en" id="back-example-en"></p><p class="example-zh" id="back-example-zh"></p></section>
             </div>
             <div class="quality-note" id="quality-note"></div>
@@ -226,6 +227,7 @@
   <script>
     "use strict";
     const DB_NAME = "vocab_coach_db", DB_VERSION = 1, CARD_STORE = "cards", META_STORE = "meta", DAY_MS = 86_400_000;
+    const LIBRARY_FILE = "us_core_7000_authentic.csv", LIBRARY_NAME = "ECDICT 高频 20000 + Wiktionary 词源", LIBRARY_VERSION = "20000-wiktionary-2026-08-16-v1";
     const DEFAULT_SETTINGS = { newLimit: 20, reviewLimit: 100, autoSpeak: false };
     const LEVELS = ["A1", "A2", "B1", "B2", "C1", "Beyond C1"];
     const TEST_LEVELS = ["A1", "A2", "B1", "B2", "C1"];
@@ -261,14 +263,14 @@
     async function putCard(card) { const tx = app.db.transaction(CARD_STORE, "readwrite"); tx.objectStore(CARD_STORE).put(card); await transactionDone(tx); }
     function normalizeCard(raw, index = 0) {
       const word = String(raw.word || "").trim();
-      return { id: raw.id || `${word.toLocaleLowerCase("en-US")}::${index}`, word, base_word: String(raw.base_word || word).trim(), level: LEVELS.includes(raw.level) ? raw.level : "", phonetic: String(raw.phonetic || "").trim(), pos: String(raw.pos || "").trim(), meaning: String(raw.meaning || "").trim(), collocation: String(raw.collocation || "").trim(), etymology: String(raw.etymology || "").trim(), example_en: String(raw.example_en || "").trim(), example_zh: String(raw.example_zh || "").trim(), state: raw.state || "new", due: Number(raw.due || 0), interval: Number(raw.interval || 0), ease: Number(raw.ease || 2.5), reps: Number(raw.reps || 0), lapses: Number(raw.lapses || 0), lastReviewed: raw.lastReviewed || null, order: Number.isFinite(Number(raw.order)) ? Number(raw.order) : index };
+      return { id: raw.id || `${word.toLocaleLowerCase("en-US")}::${index}`, word, base_word: String(raw.base_word || word).trim(), level: LEVELS.includes(raw.level) ? raw.level : "", phonetic: String(raw.phonetic || "").trim(), pos: String(raw.pos || "").trim(), meaning: String(raw.meaning || "").trim(), collocation: String(raw.collocation || "").trim(), etymology: String(raw.etymology || "").trim(), etymology_source: String(raw.etymology_source || "").trim(), etymology_license: String(raw.etymology_license || "").trim(), example_en: String(raw.example_en || "").trim(), example_zh: String(raw.example_zh || "").trim(), state: raw.state || "new", due: Number(raw.due || 0), interval: Number(raw.interval || 0), ease: Number(raw.ease || 2.5), reps: Number(raw.reps || 0), lapses: Number(raw.lapses || 0), lastReviewed: raw.lastReviewed || null, order: Number.isFinite(Number(raw.order)) ? Number(raw.order) : index };
     }
     async function replaceDeck(rows, name) {
       const clean = [], seen = new Set();
       for (const raw of rows) { const word = String(raw.word || "").trim(), key = word.toLocaleLowerCase("en-US"); if (!word || seen.has(key)) continue; seen.add(key); clean.push(normalizeCard(raw, clean.length)); }
       if (!clean.length) throw new Error("词库中没有可识别的 word 字段");
       const tx = app.db.transaction([CARD_STORE, META_STORE], "readwrite"), store = tx.objectStore(CARD_STORE); store.clear(); clean.forEach((card) => store.put(card));
-      const meta = tx.objectStore(META_STORE); meta.put({ key: "libraryName", value: name }); meta.put({ key: "activity", value: {} }); meta.put({ key: "placement", value: null }); await transactionDone(tx);
+      const meta = tx.objectStore(META_STORE); meta.put({ key: "libraryName", value: name }); meta.put({ key: "libraryVersion", value: null }); meta.put({ key: "activity", value: {} }); meta.put({ key: "placement", value: null }); await transactionDone(tx);
       app.libraryName = name; app.activity = {}; app.placement = null; app.undo = null; return clean.length;
     }
     function parseCSV(text) {
@@ -282,23 +284,30 @@
       return rows.filter((values) => values.some((value) => value.trim())).map((values) => Object.fromEntries(headers.map((header, index) => [header, values[index] || ""])));
     }
     async function seedDeck() {
-      try { const response = await fetch("us_core_7000_authentic.csv", { cache: "no-store" }); if (response.ok) { const rows = parseCSV(await response.text()); if (rows.length >= 1000) { await replaceDeck(rows, "ECDICT 高频 7000"); return; } } } catch (_) {}
+      try { const response = await fetch(LIBRARY_FILE, { cache: "no-store" }); if (response.ok) { const rows = parseCSV(await response.text()); if (rows.length >= 20000) { await replaceDeck(rows, LIBRARY_NAME); await setMeta("libraryVersion", LIBRARY_VERSION); return; } } } catch (_) {}
       await replaceDeck(SAMPLE_WORDS, "内置示例词库");
     }
-    async function ensureDifficultyMetadata() {
-      const cards = await allCards();
-      if (cards.filter((card) => LEVELS.includes(card.level)).length >= cards.length * .8) return true;
+    async function ensureBundledLibrary() {
+      if (await getMeta("libraryVersion", null) === LIBRARY_VERSION) return true;
+      const cards = await allCards(), bundled = app.libraryName.startsWith("ECDICT 高频") || cards.length === SAMPLE_WORDS.length;
+      if (!bundled) return cards.filter((card) => LEVELS.includes(card.level)).length >= cards.length * .8;
       try {
-        const response = await fetch("us_core_7000_authentic.csv", { cache: "no-store" });
+        const response = await fetch(LIBRARY_FILE, { cache: "no-store" });
         if (!response.ok) return false;
-        const sourceRows = parseCSV(await response.text()), metadata = new Map(sourceRows.map((row) => [String(row.word || "").toLocaleLowerCase("en-US"), row]));
-        const tx = app.db.transaction(CARD_STORE, "readwrite"), store = tx.objectStore(CARD_STORE);
-        cards.forEach((card) => {
-          const source = metadata.get(card.word.toLocaleLowerCase("en-US"));
-          if (source?.level) store.put({ ...card, level: source.level, base_word: source.base_word || card.word });
+        const sourceRows = parseCSV(await response.text());
+        if (sourceRows.length < 20000) return false;
+        const existing = new Map(cards.map((card) => [card.word.toLocaleLowerCase("en-US"), card]));
+        const progressFields = ["id", "state", "due", "interval", "ease", "reps", "lapses", "lastReviewed"];
+        const tx = app.db.transaction([CARD_STORE, META_STORE], "readwrite"), store = tx.objectStore(CARD_STORE);
+        sourceRows.forEach((row, index) => {
+          const incoming = normalizeCard(row, index), previous = existing.get(incoming.word.toLocaleLowerCase("en-US"));
+          if (previous) progressFields.forEach((field) => { incoming[field] = previous[field]; });
+          store.put(incoming);
         });
+        const meta = tx.objectStore(META_STORE); meta.put({ key: "libraryName", value: LIBRARY_NAME }); meta.put({ key: "libraryVersion", value: LIBRARY_VERSION });
         await transactionDone(tx);
-        return sourceRows.length >= 1000;
+        app.libraryName = LIBRARY_NAME;
+        return true;
       } catch (_) { return false; }
     }
     function learningLevels(level = app.placement?.level) {
@@ -351,6 +360,7 @@
       card.dataset.empty = "false"; card.setAttribute("role", "button"); card.setAttribute("tabindex", "0"); card.classList.toggle("is-revealed", app.revealed);
       $("front-word").textContent = app.current.word; $("front-phonetic").textContent = app.current.phonetic; $("front-level").textContent = app.current.level ? `Oxford 难度参考 ${app.current.level}` : "难度待补充"; $("back-word").textContent = app.current.word; $("back-phonetic").textContent = app.current.phonetic || "音标待补充"; $("back-pos").textContent = app.current.pos || "词性待补充"; $("back-meaning").textContent = app.current.meaning || "中文释义待补充";
       setDetail("back-collocation", app.current.collocation); setDetail("back-etymology", app.current.etymology); setDetail("back-example-en", app.current.example_en); setDetail("back-example-zh", app.current.example_zh, "");
+      const sourceLink = $("back-etymology-source"); sourceLink.hidden = !app.current.etymology_source; sourceLink.href = app.current.etymology_source || "#"; sourceLink.title = app.current.etymology_license ? `来源许可：${app.current.etymology_license}` : "";
       const missing = [app.current.phonetic, app.current.pos, app.current.meaning, app.current.collocation, app.current.etymology, app.current.example_en].filter((value) => !value).length;
       $("quality-note").textContent = missing ? `本词条有 ${missing} 项资料尚未经过可信来源验证。` : "本词条资料完整。"; $("reveal-hint").textContent = app.revealed ? "根据真实回忆难度评级" : "可直接评级，也可点击卡片查看答案";
       const intervals = nextIntervals(app.current), keys = { again: "1", hard: "2", good: "3", easy: "4" };
@@ -368,7 +378,7 @@
       $("placement-intro").hidden = view !== "intro"; $("placement-test").hidden = view !== "test"; $("placement-result").hidden = view !== "result";
     }
     async function openPlacement() {
-      const ready = await ensureDifficultyMetadata(), cards = await allCards();
+      const ready = await ensureBundledLibrary(), cards = await allCards();
       const eligible = cards.filter((card) => TEST_LEVELS.includes(card.level) && shortMeaning(card));
       if (!ready || eligible.length < 500) { showToast("当前词库缺少分级资料，请通过本地服务器打开页面或重新导入最新版词库"); return; }
       showPlacementView("intro"); $("placement-dialog").showModal();
@@ -417,7 +427,7 @@
       await startSession(); showToast(`已导入 ${(await allCards()).length} 个单词`);
     }
     async function exportBackup() { const backup = { schemaVersion: 2, exportedAt: new Date().toISOString(), libraryName: app.libraryName, settings: app.settings, activity: app.activity, placement: app.placement, cards: await allCards() }, blob = new Blob([JSON.stringify(backup)], { type: "application/json" }), url = URL.createObjectURL(blob), link = document.createElement("a"); link.href = url; link.download = `vocab-coach-backup-${dayKey()}.json`; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); }
-    async function clearDeck() { if (!confirm("确定清空当前词库和全部学习记录吗？此操作无法撤销。")) return; const tx = app.db.transaction([CARD_STORE, META_STORE], "readwrite"); tx.objectStore(CARD_STORE).clear(); tx.objectStore(META_STORE).clear(); await transactionDone(tx); await seedDeck(); app.settings = { ...DEFAULT_SETTINGS }; app.activity = {}; app.placement = null; await startSession(); showToast("已恢复内置示例词库"); }
+    async function clearDeck() { if (!confirm("确定清空当前词库和全部学习记录吗？此操作无法撤销。")) return; const tx = app.db.transaction([CARD_STORE, META_STORE], "readwrite"); tx.objectStore(CARD_STORE).clear(); tx.objectStore(META_STORE).clear(); await transactionDone(tx); await seedDeck(); app.settings = { ...DEFAULT_SETTINGS }; app.activity = {}; app.placement = null; await startSession(); showToast("已恢复内置 20000 词库"); }
     function applyTheme(theme) { document.documentElement.dataset.theme = theme; localStorage.setItem("vocabTheme", theme); }
     function bindEvents() {
       $("flashcard").addEventListener("click", (event) => { if (event.target.closest("button") || !app.current) return; reveal(); });
@@ -432,7 +442,7 @@
     }
     async function init() {
       applyTheme(localStorage.getItem("vocabTheme") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")); bindEvents();
-      try { app.db = await openDatabase(); app.settings = { ...DEFAULT_SETTINGS, ...(await getMeta("settings", {})) }; app.activity = await getMeta("activity", {}); app.placement = await getMeta("placement", null); app.libraryName = await getMeta("libraryName", "内置示例词库"); if (!(await allCards()).length) await seedDeck(); await ensureDifficultyMetadata(); app.libraryName = await getMeta("libraryName", app.libraryName); app.activity = await getMeta("activity", app.activity); app.placement = await getMeta("placement", app.placement); await startSession(); }
+      try { app.db = await openDatabase(); app.settings = { ...DEFAULT_SETTINGS, ...(await getMeta("settings", {})) }; app.activity = await getMeta("activity", {}); app.placement = await getMeta("placement", null); app.libraryName = await getMeta("libraryName", "内置示例词库"); if (!(await allCards()).length) await seedDeck(); await ensureBundledLibrary(); app.libraryName = await getMeta("libraryName", app.libraryName); app.activity = await getMeta("activity", app.activity); app.placement = await getMeta("placement", app.placement); await startSession(); }
       catch (error) { $("front-word").textContent = "无法启动"; $("front-phonetic").textContent = error.message; showToast("浏览器存储不可用，请使用最新版 Chrome、Edge 或 Safari"); }
     }
     init();

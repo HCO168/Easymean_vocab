@@ -27,6 +27,7 @@ UPDATE_FILES = (
     "start_vocab.py",
     "update_vocab.py",
     "build_authentic_7000.py",
+    "enrich_wiktionary_etymology.py",
     "apply_cefr_levels.py",
     "audit_vocabulary.py",
 )
@@ -95,7 +96,7 @@ def validate(files: dict[str, bytes]) -> None:
     header = csv_text.splitlines()[0]
     if not header.startswith("word,base_word,phonetic,pos,meaning,level"):
         raise RuntimeError("词库表头校验失败")
-    if len(csv_text.splitlines()) < 7001:
+    if len(csv_text.splitlines()) < 20001:
         raise RuntimeError("词库数量校验失败")
 
     ast.parse(files["start_vocab.py"].decode("utf-8"))

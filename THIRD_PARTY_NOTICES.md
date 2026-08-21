@@ -29,3 +29,9 @@ SOFTWARE.
 ## Oxford wordlists
 
 CEFR level metadata was mapped using the publicly available Oxford 3000 and Oxford 5000 wordlists. The original PDF files are not redistributed in this repository. Oxford and Oxford Learner's Dictionaries are trademarks of Oxford University Press.
+
+## English Wiktionary and Wiktextract
+
+English etymology text is derived from [English Wiktionary](https://en.wiktionary.org/) through [Wiktextract/Kaikki](https://kaikki.org/dictionary/English/). The bundled text was extracted from the Kaikki snapshot last modified on 2026-08-16, cleaned, deduplicated, and shortened for study-card display. Each populated CSV row includes its source page and license.
+
+Wiktionary text is reused under the [Creative Commons Attribution-ShareAlike 4.0 International License](https://creativecommons.org/licenses/by-sa/4.0/) (CC BY-SA 4.0). The adapted etymology text and its translations or modifications must remain available under the same or a compatible license, with attribution and an indication that changes were made.

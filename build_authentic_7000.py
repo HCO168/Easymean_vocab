@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build an honest 7,000-word study deck from ECDICT.
+"""Build an honest 20,000-word study deck from ECDICT.
 
 The script keeps the order of the supplied core-word list, downloads ECDICT's
 UTF-8 CSV, and replaces only fields that ECDICT actually provides.  It does
@@ -27,6 +27,8 @@ FIELDS = [
     "level",
     "collocation",
     "etymology",
+    "etymology_source",
+    "etymology_license",
     "example_en",
     "example_zh",
 ]
@@ -170,6 +172,8 @@ def build(input_path: Path | None, output_path: Path, limit: int, url: str) -> t
                     "level": "",
                     "collocation": "",
                     "etymology": "",
+                    "etymology_source": "",
+                    "etymology_license": "",
                     "example_en": "",
                     "example_zh": "",
                 }
@@ -181,7 +185,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--input", type=Path, help="Optional CSV whose word order should be preserved")
     parser.add_argument("--output", type=Path, default=Path("us_core_7000_authentic.csv"))
-    parser.add_argument("--limit", type=int, default=7000)
+    parser.add_argument("--limit", type=int, default=20000)
     parser.add_argument("--url", default=ECDICT_URL, help="ECDICT CSV URL or file URL")
     args = parser.parse_args()
 
