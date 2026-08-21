@@ -1,0 +1,6 @@
+*.csv -text -diff
+*.bat text eol=crlf
+*.command text eol=lf
+*.py text eol=lf
+*.html text eol=lf
+*.md text eol=lf
