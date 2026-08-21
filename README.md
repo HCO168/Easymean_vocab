@@ -8,7 +8,7 @@
 - macOS：双击 `启动英语词汇学习.command`
 - 其他平台：运行 `python3 start_vocab.py`
 
-启动器会在本机开启 HTTP 服务并自动打开浏览器。按回车键或 `Ctrl+C` 停止服务。Python 建议使用 3.9 或更高版本，无需安装第三方依赖。
+启动器固定使用 `http://127.0.0.1:8765` 并自动打开浏览器。浏览器会按网址保存 IndexedDB，因此启动器不会自动换端口；重复启动时会直接打开已经运行的页面。按回车键或 `Ctrl+C` 停止服务。Python 建议使用 3.9 或更高版本，无需安装第三方依赖。
 
 ## 更新
 
@@ -19,7 +19,7 @@
 
 ## 数据与隐私
 
-词库、逐卡难度、定级结果和未完成测试均保存在浏览器 IndexedDB 中，不会上传到服务器。“备份进度”导出的 JSON 包含完整学习状态及 SHA-256 完整性校验；损坏或被篡改的新版备份会被拒绝。
+词库、逐卡难度、定级结果和未完成测试均保存在浏览器 IndexedDB 中，不会上传到服务器或 GitHub。“备份进度”导出的 JSON 包含完整学习状态及 SHA-256 完整性校验；损坏或被篡改的新版备份会被拒绝。备份默认下载到浏览器下载目录，仓库也会忽略标准备份文件名。
 
 默认词库基于 [ECDICT](https://github.com/skywind3000/ECDICT) 构建，难度参考来自 [Oxford 3000/5000 CEFR wordlists](https://www.oxfordlearnersdictionaries.com/us/wordlists/oxford3000-5000)。中文构词关系优先来自 [engra](https://github.com/eslsoft/engra)，其余可靠来源语言由 [English Wiktionary](https://en.wiktionary.org/) 数据压缩为中文短注；双语例句来自 [Tatoeba](https://tatoeba.org/) 的校对语料。定级结果只用于安排学习范围，不是正式 CEFR 认证。
 
