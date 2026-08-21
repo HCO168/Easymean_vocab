@@ -12,6 +12,7 @@
 | `启动英语词汇学习.bat` | Windows 双击启动入口 |
 | `更新英语词汇学习.command` | macOS 一键拉取最新版 |
 | `更新英语词汇学习.bat` | Windows 一键拉取最新版 |
+| `update_vocab.py` | 兼容 Git 克隆与 ZIP 下载版本的安全更新核心 |
 | `start_vocab.py` | 自动启动本地服务器并打开浏览器 |
 | `build_authentic_7000.py` | 从 ECDICT 重新构建可信核心词库 |
 | `apply_cefr_levels.py` | 从 American Oxford 3000/5000 PDF 添加 CEFR 学习难度 |
