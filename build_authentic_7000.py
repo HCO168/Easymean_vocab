@@ -31,6 +31,8 @@ FIELDS = [
     "etymology_license",
     "example_en",
     "example_zh",
+    "example_source",
+    "example_license",
 ]
 
 
@@ -176,6 +178,8 @@ def build(input_path: Path | None, output_path: Path, limit: int, url: str) -> t
                     "etymology_license": "",
                     "example_en": "",
                     "example_zh": "",
+                    "example_source": "",
+                    "example_license": "",
                 }
             )
     return len(sources), matched

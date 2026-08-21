@@ -11,7 +11,7 @@ from collections import Counter
 from pathlib import Path
 
 
-REQUIRED = {"word", "phonetic", "pos", "meaning", "collocation", "etymology", "etymology_source", "etymology_license", "example_en", "example_zh"}
+REQUIRED = {"word", "phonetic", "pos", "meaning", "collocation", "etymology", "etymology_source", "etymology_license", "example_en", "example_zh", "example_source", "example_license"}
 GENERIC_PATTERNS = {
     "meaning": re.compile(r"^(常用核心词|核心常用词|高频日常核心词|日常核心词|核心高频词)$"),
     "collocation": re.compile(r"^(use|apply|take)\s+", re.I),
@@ -50,6 +50,11 @@ def audit(path: Path) -> dict:
     result["provenance_mismatches"] = sum(
         bool(row.get("etymology", "").strip())
         != bool(row.get("etymology_source", "").strip() and row.get("etymology_license", "").strip())
+        for row in rows
+    )
+    result["provenance_mismatches"] += sum(
+        bool(row.get("example_en", "").strip() and row.get("example_zh", "").strip())
+        != bool(row.get("example_source", "").strip() and row.get("example_license", "").strip())
         for row in rows
     )
     result["critical_ok"] = not result["missing_columns"] and not result["empty_words"] and not result["duplicate_words"] and not result["provenance_mismatches"]

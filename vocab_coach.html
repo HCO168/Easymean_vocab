@@ -38,7 +38,7 @@
     .primary-button:hover { background: var(--accent-strong); }
     button:active { transform: scale(.98); }
     button:disabled { opacity: .45; cursor: not-allowed; transform: none; }
-    .workspace { display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 28px; align-items: start; }
+    .workspace { min-height: 0; display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 28px; align-items: start; }
     .sidebar { display: grid; gap: 18px; padding-top: 8px; }
     .session-title { margin: 0; font-size: 12px; color: var(--muted); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
     .session-count { margin: 5px 0 0; font-size: 44px; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -.06em; }
@@ -48,14 +48,14 @@
     .stat-row dt, .stat-row dd { margin: 0; }
     .stat-row dd { color: var(--text); font-weight: 700; font-variant-numeric: tabular-nums; }
     .session-note { color: var(--muted); font-size: 13px; line-height: 1.6; margin: 0; }
-    .study { min-width: 0; display: grid; gap: 14px; }
+    .study { min-width: 0; min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 14px; }
     .status-line { min-height: 24px; display: flex; justify-content: space-between; align-items: center; gap: 12px; color: var(--muted); font-size: 13px; }
     .data-source { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .card { min-height: 470px; padding: clamp(24px, 5vw, 52px); border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow); cursor: pointer; display: grid; align-content: space-between; gap: 32px; }
+    .card { min-height: clamp(390px, calc(100dvh - 300px), 560px); max-height: calc(100dvh - 260px); overflow: auto; padding: clamp(24px, 5vw, 52px); border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow); cursor: pointer; display: grid; align-content: space-between; gap: 32px; scroll-padding: 24px; }
     .card:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
     .card[data-empty="true"] { cursor: default; align-content: center; text-align: center; }
     .word-block { align-self: center; }
-    .word { margin: 0; overflow-wrap: anywhere; font-size: clamp(42px, 8vw, 74px); line-height: 1; letter-spacing: -.055em; }
+    .word { margin: 0; padding: .08em 0; overflow-wrap: anywhere; font-size: clamp(42px, 8vw, 74px); line-height: 1.12; letter-spacing: -.055em; }
     .phonetic { margin: 14px 0 0; color: var(--accent); font-size: clamp(16px, 2.5vw, 21px); font-family: "Lucida Sans Unicode", "Arial Unicode MS", sans-serif; }
     .reveal-hint { color: var(--muted); font-size: 14px; text-align: center; }
     .answer { display: none; align-content: start; gap: 22px; }
@@ -78,7 +78,7 @@
     .example-en { font-size: 16px !important; }
     .example-zh { margin-top: 6px !important; color: var(--muted); }
     .quality-note { font-size: 12px; color: var(--muted); }
-    .ratings { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .ratings { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; background: var(--bg); }
     .rating { min-height: 62px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); cursor: pointer; display: grid; place-content: center; gap: 3px; font-weight: 800; }
     .rating span { font-size: 11px; color: var(--muted); font-weight: 500; }
     .rating:hover:not(:disabled) { border-color: var(--accent); background: var(--accent-soft); }
@@ -91,8 +91,9 @@
     .toast.show { opacity: 1; transform: translate(-50%, 0); }
     dialog { width: min(520px, calc(100% - 32px)); border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); color: var(--text); padding: 0; box-shadow: var(--shadow); }
     dialog::backdrop { background: rgba(10, 15, 12, .48); }
-    .dialog-inner { padding: 24px; display: grid; gap: 20px; }
+    .dialog-inner { position: relative; padding: 24px; display: grid; gap: 20px; }
     .dialog-inner h2 { margin: 0; font-size: 22px; }
+    .dialog-close { position: absolute; top: 14px; right: 14px; width: 38px; min-height: 38px; padding: 0; border: 1px solid var(--line); border-radius: 999px; background: var(--surface-2); cursor: pointer; font-size: 21px; line-height: 1; }
     .field { display: grid; gap: 8px; }
     .field label { font-weight: 700; font-size: 14px; }
     .field select { min-height: 42px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 9px; background: var(--bg); color: var(--text); }
@@ -107,8 +108,14 @@
     .test-options { display: grid; gap: 9px; }
     .test-option { min-height: 52px; padding: 11px 14px; text-align: left; line-height: 1.45; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); cursor: pointer; }
     .test-option:hover { border-color: var(--accent); background: var(--accent-soft); }
+    .test-option.unknown { text-align: center; color: var(--muted); border-style: dashed; }
+    .test-exit { width: 100%; margin-top: 12px; }
     .result-level { margin: 0; color: var(--accent); font-size: 64px; line-height: 1; letter-spacing: -.06em; }
     .result-range { padding: 14px 16px; border-radius: 10px; background: var(--accent-soft); line-height: 1.55; }
+    .closed-screen { min-height: 100dvh; padding: 32px; display: grid; place-items: center; text-align: center; }
+    .closed-panel { width: min(480px, 100%); padding: 36px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow); }
+    .closed-panel h1 { margin: 0 0 12px; }
+    .closed-panel p { margin: 0 0 22px; color: var(--muted); line-height: 1.65; }
     [hidden] { display: none !important; }
     .visually-hidden { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
     @media (max-width: 760px) {
@@ -119,7 +126,7 @@
       .stat-list { grid-template-columns: repeat(3, auto); gap: 10px 18px; }
       .session-note { display: none; }
       .session-count { font-size: 34px; }
-      .card { min-height: 430px; padding: 24px; }
+      .card { min-height: 430px; max-height: none; padding: 24px; }
       .detail-grid { grid-template-columns: 1fr; }
       .example { grid-column: auto; }
       .ratings { gap: 6px; }
@@ -138,13 +145,14 @@
   </style>
 </head>
 <body>
-  <main class="app">
+  <main class="app" id="app-shell">
     <header class="topbar">
       <div class="brand"><h1>英语词汇学习</h1><span>每天只学今天该学的</span></div>
       <div class="top-actions">
         <button class="quiet-button" id="theme-button" type="button" aria-label="切换明暗主题">主题</button>
         <button class="quiet-button" id="placement-button" type="button">词汇定级</button>
         <button class="quiet-button" id="settings-button" type="button">设置</button>
+        <button class="quiet-button" id="exit-button" type="button">关闭</button>
         <button class="primary-button" id="import-button" type="button">导入词库</button>
         <input class="visually-hidden" id="file-input" type="file" accept=".csv,.json,text/csv,application/json">
       </div>
@@ -156,6 +164,7 @@
           <div class="stat-row"><dt>已完成</dt><dd id="completed-count">0</dd></div>
           <div class="stat-row"><dt>今日复习</dt><dd id="reviewed-count">0</dd></div>
           <div class="stat-row"><dt>连续学习</dt><dd><span id="streak-count">0</span> 天</dd></div>
+          <div class="stat-row"><dt>当前定级</dt><dd id="placement-level">未测试</dd></div>
         </dl>
         <p class="session-note">先回忆，再翻面。评级只决定下一次出现的时间，不代表考试成绩。</p>
       </aside>
@@ -172,7 +181,7 @@
             <div class="detail-grid">
               <section class="detail"><h3>常用搭配</h3><p id="back-collocation"></p></section>
               <section class="detail"><h3>词源与构词</h3><p id="back-etymology"></p><a class="source-link" id="back-etymology-source" target="_blank" rel="noreferrer" hidden>查看 Wiktionary 来源</a></section>
-              <section class="detail example"><h3>语境例句</h3><p class="example-en" id="back-example-en"></p><p class="example-zh" id="back-example-zh"></p></section>
+              <section class="detail example"><h3>语境例句</h3><p class="example-en" id="back-example-en"></p><p class="example-zh" id="back-example-zh"></p><a class="source-link" id="back-example-source" target="_blank" rel="noreferrer" hidden>查看 Tatoeba 例句来源</a></section>
             </div>
             <div class="quality-note" id="quality-note"></div>
           </div>
@@ -193,6 +202,7 @@
   </main>
   <dialog id="settings-dialog">
     <form class="dialog-inner" method="dialog">
+      <button class="dialog-close" value="cancel" type="submit" aria-label="关闭设置">×</button>
       <h2>学习设置</h2>
       <div class="field"><label for="new-limit">每天新学单词</label><select id="new-limit"><option>10</option><option selected>20</option><option>30</option><option>50</option></select></div>
       <div class="field"><label for="review-limit">每天最多复习</label><select id="review-limit"><option>50</option><option selected>100</option><option>150</option><option>200</option></select></div>
@@ -202,9 +212,11 @@
   </dialog>
   <dialog id="placement-dialog">
     <div class="dialog-inner">
+      <button class="dialog-close" id="placement-close" type="button" aria-label="关闭词汇定级">×</button>
       <section id="placement-intro">
         <h2>词汇 Placement Test</h2>
         <p class="placement-copy">完成 18 道自适应词义题。答对后题目会变难，答错后会降低难度。测试完成后，新词只从你的同级和高一级中抽取。</p>
+        <p class="result-range" id="placement-saved-status" hidden></p>
         <p class="placement-source">难度依据：<a href="https://www.oxfordlearnersdictionaries.com/us/wordlists/oxford3000-5000" target="_blank" rel="noreferrer">American Oxford 3000/5000 CEFR 分级</a>。结果只反映词义识别能力，不是正式 CEFR 证书。</p>
         <div class="dialog-actions"><button class="quiet-button" id="placement-cancel" type="button">稍后再测</button><button class="primary-button" id="start-placement" type="button">开始测试</button></div>
       </section>
@@ -213,21 +225,25 @@
         <div class="test-level" id="test-level">当前难度 B1</div>
         <h2 class="test-word" id="test-word">word</h2>
         <div class="test-options" id="test-options"></div>
+        <button class="quiet-button test-exit" id="placement-test-exit" type="button">退出测试（自动保存进度）</button>
       </section>
       <section id="placement-result" hidden>
         <p class="test-progress">词汇识别水平估算</p>
         <h2 class="result-level" id="result-level">B1</h2>
         <p class="placement-copy" id="result-summary"></p>
         <div class="result-range" id="result-range"></div>
-        <div class="dialog-actions"><button class="quiet-button" id="retest-placement" type="button">重新测试</button><button class="primary-button" id="apply-placement" type="button">按此级别学习</button></div>
+        <div class="dialog-actions"><button class="quiet-button" id="retest-placement" type="button">重新测试</button><button class="primary-button" id="apply-placement" type="button">开始按此级别学习</button></div>
       </section>
     </div>
   </dialog>
+  <section class="closed-screen" id="closed-screen" hidden>
+    <div class="closed-panel"><h1>学习进度已保存</h1><p>现在可以安全关闭浏览器标签页。若浏览器阻止网页自动关闭，也不会影响已记录的难度和复习进度。</p><button class="primary-button" id="resume-button" type="button">返回学习</button></div>
+  </section>
   <div class="toast" id="toast" role="status"></div>
   <script>
     "use strict";
     const DB_NAME = "vocab_coach_db", DB_VERSION = 1, CARD_STORE = "cards", META_STORE = "meta", DAY_MS = 86_400_000;
-    const LIBRARY_FILE = "us_core_7000_authentic.csv", LIBRARY_NAME = "ECDICT 高频 20000 + Wiktionary 词源", LIBRARY_VERSION = "20000-wiktionary-2026-08-16-v1";
+    const LIBRARY_FILE = "us_core_7000_authentic.csv", LIBRARY_NAME = "ECDICT 高频 20000 + 中文构词 + Tatoeba 例句", LIBRARY_VERSION = "20000-zh-formation-tatoeba-2026-08-v2";
     const DEFAULT_SETTINGS = { newLimit: 20, reviewLimit: 100, autoSpeak: false };
     const LEVELS = ["A1", "A2", "B1", "B2", "C1", "Beyond C1"];
     const TEST_LEVELS = ["A1", "A2", "B1", "B2", "C1"];
@@ -238,7 +254,7 @@
       { word: "schedule", level: "B1", phonetic: "/ˈskedʒuːl/", pos: "n./vt.", meaning: "日程；时间表；安排", collocation: "ahead of schedule", etymology: "源自晚期拉丁语 schedula，原指一小张纸。", example_en: "The train arrived right on schedule.", example_zh: "火车准点到达。" },
       { word: "maintain", level: "B2", phonetic: "/meɪnˈteɪn/", pos: "vt.", meaning: "维持；保养；坚持认为", collocation: "maintain high standards", etymology: "源自拉丁语 manu tenere，字面含义是用手握住。", example_en: "Regular exercise helps maintain your energy level.", example_zh: "规律锻炼有助于维持精力。" }
     ];
-    const app = { db: null, settings: { ...DEFAULT_SETTINGS }, activity: {}, placement: null, test: null, libraryName: "示例词库", current: null, queue: [], revealed: false, completed: 0, undo: null, sessionSeen: new Map(), toastTimer: null };
+    const app = { db: null, settings: { ...DEFAULT_SETTINGS }, activity: {}, placement: null, placementDraft: null, test: null, libraryName: "示例词库", current: null, queue: [], revealed: false, completed: 0, undo: null, sessionSeen: new Map(), toastTimer: null };
     const $ = (id) => document.getElementById(id);
     const ratingButtons = [...document.querySelectorAll("[data-rating]")];
     function dayKey(date = new Date()) { return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`; }
@@ -263,15 +279,15 @@
     async function putCard(card) { const tx = app.db.transaction(CARD_STORE, "readwrite"); tx.objectStore(CARD_STORE).put(card); await transactionDone(tx); }
     function normalizeCard(raw, index = 0) {
       const word = String(raw.word || "").trim();
-      return { id: raw.id || `${word.toLocaleLowerCase("en-US")}::${index}`, word, base_word: String(raw.base_word || word).trim(), level: LEVELS.includes(raw.level) ? raw.level : "", phonetic: String(raw.phonetic || "").trim(), pos: String(raw.pos || "").trim(), meaning: String(raw.meaning || "").trim(), collocation: String(raw.collocation || "").trim(), etymology: String(raw.etymology || "").trim(), etymology_source: String(raw.etymology_source || "").trim(), etymology_license: String(raw.etymology_license || "").trim(), example_en: String(raw.example_en || "").trim(), example_zh: String(raw.example_zh || "").trim(), state: raw.state || "new", due: Number(raw.due || 0), interval: Number(raw.interval || 0), ease: Number(raw.ease || 2.5), reps: Number(raw.reps || 0), lapses: Number(raw.lapses || 0), lastReviewed: raw.lastReviewed || null, order: Number.isFinite(Number(raw.order)) ? Number(raw.order) : index };
+      return { id: String(raw.id || `${word.toLocaleLowerCase("en-US")}::${index}`), word, base_word: String(raw.base_word || word).trim(), level: LEVELS.includes(raw.level) ? raw.level : "", phonetic: String(raw.phonetic || "").trim(), pos: String(raw.pos || "").trim(), meaning: String(raw.meaning || "").trim(), collocation: String(raw.collocation || "").trim(), etymology: String(raw.etymology || "").trim(), etymology_source: String(raw.etymology_source || "").trim(), etymology_license: String(raw.etymology_license || "").trim(), example_en: String(raw.example_en || "").trim(), example_zh: String(raw.example_zh || "").trim(), example_source: String(raw.example_source || "").trim(), example_license: String(raw.example_license || "").trim(), state: raw.state || "new", due: Number(raw.due || 0), interval: Number(raw.interval || 0), ease: Number(raw.ease || 2.5), reps: Number(raw.reps || 0), lapses: Number(raw.lapses || 0), lastReviewed: raw.lastReviewed || null, order: Number.isFinite(Number(raw.order)) ? Number(raw.order) : index };
     }
     async function replaceDeck(rows, name) {
       const clean = [], seen = new Set();
       for (const raw of rows) { const word = String(raw.word || "").trim(), key = word.toLocaleLowerCase("en-US"); if (!word || seen.has(key)) continue; seen.add(key); clean.push(normalizeCard(raw, clean.length)); }
       if (!clean.length) throw new Error("词库中没有可识别的 word 字段");
       const tx = app.db.transaction([CARD_STORE, META_STORE], "readwrite"), store = tx.objectStore(CARD_STORE); store.clear(); clean.forEach((card) => store.put(card));
-      const meta = tx.objectStore(META_STORE); meta.put({ key: "libraryName", value: name }); meta.put({ key: "libraryVersion", value: null }); meta.put({ key: "activity", value: {} }); meta.put({ key: "placement", value: null }); await transactionDone(tx);
-      app.libraryName = name; app.activity = {}; app.placement = null; app.undo = null; return clean.length;
+      const meta = tx.objectStore(META_STORE); meta.put({ key: "libraryName", value: name }); meta.put({ key: "libraryVersion", value: null }); meta.put({ key: "activity", value: {} }); meta.put({ key: "placement", value: null }); meta.put({ key: "placementDraft", value: null }); await transactionDone(tx);
+      app.libraryName = name; app.activity = {}; app.placement = null; app.placementDraft = null; app.undo = null; return clean.length;
     }
     function parseCSV(text) {
       const rows = []; let row = [], field = "", quoted = false;
@@ -355,12 +371,13 @@
     function setDetail(id, value, fallback = "待可信来源补充") { const element = $(id); element.textContent = value || fallback; element.classList.toggle("missing", !value); }
     function render() {
       const card = $("flashcard"), remaining = app.queue.length + (app.current ? 1 : 0);
-      $("remaining-count").textContent = remaining; $("completed-count").textContent = app.completed; $("reviewed-count").textContent = todayActivity().reviewed; $("streak-count").textContent = calculateStreak(); $("data-source").textContent = app.placement ? `${app.libraryName} · ${learningLevels().join(" + ")}` : `${app.libraryName} · 尚未定级`; $("undo-button").disabled = !app.undo;
+      $("remaining-count").textContent = remaining; $("completed-count").textContent = app.completed; $("reviewed-count").textContent = todayActivity().reviewed; $("streak-count").textContent = calculateStreak(); $("placement-level").textContent = app.placement?.level || (app.placementDraft ? `测试中 ${app.placementDraft.answered}/${PLACEMENT_QUESTIONS}` : "未测试"); $("data-source").textContent = app.placement ? `${app.libraryName} · ${learningLevels().join(" + ")}` : `${app.libraryName} · 尚未定级`; $("undo-button").disabled = !app.undo;
       if (!app.current) { card.dataset.empty = "true"; card.classList.remove("is-revealed"); card.removeAttribute("role"); card.removeAttribute("tabindex"); $("front-word").textContent = "今日完成"; $("front-phonetic").textContent = "下一批内容会在到期后自动出现"; $("reveal-hint").textContent = "你可以休息，或在设置中增加每日新词数量"; ratingButtons.forEach((button) => button.disabled = true); return; }
       card.dataset.empty = "false"; card.setAttribute("role", "button"); card.setAttribute("tabindex", "0"); card.classList.toggle("is-revealed", app.revealed);
       $("front-word").textContent = app.current.word; $("front-phonetic").textContent = app.current.phonetic; $("front-level").textContent = app.current.level ? `Oxford 难度参考 ${app.current.level}` : "难度待补充"; $("back-word").textContent = app.current.word; $("back-phonetic").textContent = app.current.phonetic || "音标待补充"; $("back-pos").textContent = app.current.pos || "词性待补充"; $("back-meaning").textContent = app.current.meaning || "中文释义待补充";
       setDetail("back-collocation", app.current.collocation); setDetail("back-etymology", app.current.etymology); setDetail("back-example-en", app.current.example_en); setDetail("back-example-zh", app.current.example_zh, "");
       const sourceLink = $("back-etymology-source"); sourceLink.hidden = !app.current.etymology_source; sourceLink.href = app.current.etymology_source || "#"; sourceLink.title = app.current.etymology_license ? `来源许可：${app.current.etymology_license}` : "";
+      const exampleLink = $("back-example-source"); exampleLink.hidden = !app.current.example_source; exampleLink.href = app.current.example_source || "#"; exampleLink.title = app.current.example_license ? `来源许可：${app.current.example_license}` : "";
       const missing = [app.current.phonetic, app.current.pos, app.current.meaning, app.current.collocation, app.current.etymology, app.current.example_en].filter((value) => !value).length;
       $("quality-note").textContent = missing ? `本词条有 ${missing} 项资料尚未经过可信来源验证。` : "本词条资料完整。"; $("reveal-hint").textContent = app.revealed ? "根据真实回忆难度评级" : "可直接评级，也可点击卡片查看答案";
       const intervals = nextIntervals(app.current), keys = { again: "1", hard: "2", good: "3", easy: "4" };
@@ -377,17 +394,32 @@
     function showPlacementView(view) {
       $("placement-intro").hidden = view !== "intro"; $("placement-test").hidden = view !== "test"; $("placement-result").hidden = view !== "result";
     }
+    function renderPlacementStatus() {
+      const status = $("placement-saved-status"), start = $("start-placement");
+      const messages = [];
+      if (app.placement) messages.push(`已保存定级：${app.placement.level}（${new Date(app.placement.testedAt).toLocaleDateString("zh-CN")}）`);
+      if (app.placementDraft) messages.push(`未完成测试：已答 ${app.placementDraft.answered} / ${PLACEMENT_QUESTIONS} 题`);
+      status.hidden = !messages.length; status.textContent = messages.join("；"); start.textContent = app.placementDraft ? "继续上次测试" : "开始测试";
+    }
     async function openPlacement() {
       const ready = await ensureBundledLibrary(), cards = await allCards();
       const eligible = cards.filter((card) => TEST_LEVELS.includes(card.level) && shortMeaning(card));
       if (!ready || eligible.length < 500) { showToast("当前词库缺少分级资料，请通过本地服务器打开页面或重新导入最新版词库"); return; }
-      showPlacementView("intro"); $("placement-dialog").showModal();
+      renderPlacementStatus(); showPlacementView("intro"); $("placement-dialog").showModal();
     }
-    async function startPlacement() {
+    function serializePlacementTest() {
+      if (!app.test) return null;
+      return { theta: app.test.theta, answered: app.test.answered, correct: app.test.correct, unknown: app.test.unknown, used: [...app.test.used], startedAt: app.test.startedAt };
+    }
+    async function persistPlacementDraft() { app.placementDraft = serializePlacementTest(); await setMeta("placementDraft", app.placementDraft); render(); }
+    async function startPlacement(forceNew = false) {
       const cards = await allCards(), pools = new Map(TEST_LEVELS.map((level) => [level, []]));
       cards.forEach((card) => { if (pools.has(card.level) && shortMeaning(card)) pools.get(card.level).push(card); });
-      app.test = { theta: 2, answered: 0, correct: 0, used: new Set(), pools, current: null, result: null };
-      showPlacementView("test"); nextPlacementQuestion();
+      const draft = !forceNew ? app.placementDraft : null;
+      app.test = draft
+        ? { theta: Number(draft.theta), answered: Number(draft.answered), correct: Number(draft.correct), unknown: Number(draft.unknown || 0), used: new Set(draft.used || []), startedAt: draft.startedAt, pools, current: null, result: null, answering: false }
+        : { theta: 2, answered: 0, correct: 0, unknown: 0, used: new Set(), startedAt: new Date().toISOString(), pools, current: null, result: null, answering: false };
+      await persistPlacementDraft(); showPlacementView("test"); nextPlacementQuestion();
     }
     function nextPlacementQuestion() {
       if (app.test.answered >= PLACEMENT_QUESTIONS) { finishPlacement(); return; }
@@ -400,49 +432,94 @@
       const options = shuffle([{ text: correctMeaning, correct: true }, ...distractors.map((text) => ({ text, correct: false }))]);
       $("test-progress").textContent = `第 ${app.test.answered + 1} / ${PLACEMENT_QUESTIONS} 题`;
       $("test-level").textContent = `当前难度 ${level}`; $("test-word").textContent = question.word; $("test-options").replaceChildren();
-      options.forEach((option) => { const button = document.createElement("button"); button.type = "button"; button.className = "test-option"; button.textContent = option.text; button.addEventListener("click", () => answerPlacement(option.correct)); $("test-options").append(button); });
+      options.forEach((option) => { const button = document.createElement("button"); button.type = "button"; button.className = "test-option"; button.textContent = option.text; button.addEventListener("click", () => answerPlacement(option.correct, false)); $("test-options").append(button); });
+      const unknown = document.createElement("button"); unknown.type = "button"; unknown.className = "test-option unknown"; unknown.textContent = "不知道"; unknown.addEventListener("click", () => answerPlacement(false, true)); $("test-options").append(unknown);
     }
-    function answerPlacement(correct) {
+    async function answerPlacement(correct, unknown = false) {
+      if (app.test.answering) return;
+      app.test.answering = true; [...$("test-options").querySelectorAll("button")].forEach((button) => { button.disabled = true; });
       const difficulty = app.test.current.difficulty, probability = 1 / (1 + Math.exp(-(app.test.theta - difficulty)));
       app.test.theta = Math.max(-.5, Math.min(4.5, app.test.theta + 1.15 * ((correct ? 1 : 0) - probability)));
-      app.test.answered++; if (correct) app.test.correct++; nextPlacementQuestion();
+      app.test.answered++; if (correct) app.test.correct++; if (unknown) app.test.unknown++; await persistPlacementDraft(); app.test.answering = false; nextPlacementQuestion();
     }
-    function finishPlacement() {
+    async function finishPlacement() {
       const index = Math.max(0, Math.min(TEST_LEVELS.length - 1, Math.round(app.test.theta))), level = TEST_LEVELS[index], accuracy = Math.round(app.test.correct / PLACEMENT_QUESTIONS * 100), range = learningLevels(level);
-      app.test.result = { level, accuracy, theta: Number(app.test.theta.toFixed(2)), testedAt: new Date().toISOString(), source: "American Oxford 3000/5000" };
-      $("result-level").textContent = level; $("result-summary").textContent = `答对 ${app.test.correct} / ${PLACEMENT_QUESTIONS} 题，词义识别正确率 ${accuracy}%。自适应题目会随作答升降难度，因此正确率不是唯一判定依据。`;
+      app.test.result = { level, accuracy, correct: app.test.correct, unknown: app.test.unknown, theta: Number(app.test.theta.toFixed(2)), testedAt: new Date().toISOString(), source: "American Oxford 3000/5000" };
+      app.placement = app.test.result; app.placementDraft = null; await Promise.all([setMeta("placement", app.placement), setMeta("placementDraft", null)]);
+      $("result-level").textContent = level; $("result-summary").textContent = `答对 ${app.test.correct} / ${PLACEMENT_QUESTIONS} 题，不知道 ${app.test.unknown} 题，词义识别正确率 ${accuracy}%。结果已自动保存。`;
       $("result-range").textContent = `推荐新词范围：${range.join(" 和 ")}。约 75% 来自同级，25% 来自高一级。已经学过的单词仍会按期复习。`;
       showPlacementView("result");
     }
     async function applyPlacement() {
       if (!app.test?.result) return;
-      app.placement = app.test.result; await setMeta("placement", app.placement); $("placement-dialog").close(); await startSession(); showToast(`已按 ${learningLevels().join(" + ")} 安排新词`);
+      $("placement-dialog").close(); await startSession(); showToast(`已按 ${learningLevels().join(" + ")} 安排新词`);
     }
+    function exitPlacement() { $("placement-dialog").close(); showToast(app.placementDraft ? "测试进度已保存，下次可以继续" : "定级结果已保存"); }
     function speak(text) { if (!text || !("speechSynthesis" in window)) { showToast("当前浏览器不支持语音合成"); return; } speechSynthesis.cancel(); const utterance = new SpeechSynthesisUtterance(text); utterance.lang = "en-US"; utterance.rate = .88; const voices = speechSynthesis.getVoices(); utterance.voice = voices.find((voice) => voice.lang === "en-US") || voices.find((voice) => voice.lang.startsWith("en")) || null; speechSynthesis.speak(utterance); }
     function showToast(message) { clearTimeout(app.toastTimer); $("toast").textContent = message; $("toast").classList.add("show"); app.toastTimer = setTimeout(() => $("toast").classList.remove("show"), 2600); }
+    async function backupChecksum(backup) {
+      if (!crypto?.subtle) throw new Error("当前浏览器不支持备份完整性校验");
+      const copy = { ...backup }; delete copy.integrity;
+      const bytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(JSON.stringify(copy)));
+      return [...new Uint8Array(bytes)].map((value) => value.toString(16).padStart(2, "0")).join("");
+    }
+    function validPlacement(value) { return value === null || (value && TEST_LEVELS.includes(value.level) && Number.isFinite(Number(value.theta))); }
+    function validPlacementDraft(value) { return value === null || (value && Number.isFinite(Number(value.theta)) && Number.isInteger(Number(value.answered)) && Number(value.answered) >= 0 && Number(value.answered) < PLACEMENT_QUESTIONS && Number.isInteger(Number(value.correct)) && Number(value.correct) >= 0 && Number(value.correct) <= Number(value.answered) && Number.isInteger(Number(value.unknown || 0)) && Number(value.unknown || 0) >= 0 && Number(value.unknown || 0) <= Number(value.answered) && Array.isArray(value.used) && value.used.length <= PLACEMENT_QUESTIONS); }
+    async function restoreBackup(backup) {
+      if (!backup || ![2, 3].includes(Number(backup.schemaVersion)) || !Array.isArray(backup.cards) || !backup.cards.length || backup.cards.length > 100000) throw new Error("备份格式或卡片数量无效");
+      if (backup.integrity) {
+        if (backup.integrity.algorithm !== "SHA-256" || backup.integrity.value !== await backupChecksum(backup)) throw new Error("备份完整性校验失败，文件可能不完整或已损坏");
+      }
+      if (!validPlacement(backup.placement || null)) throw new Error("备份中的定级结果无效");
+      if (!validPlacementDraft(backup.placementDraft || null)) throw new Error("备份中的未完成测试无效");
+      const clean = [], ids = new Set(), words = new Set();
+      for (const raw of backup.cards) {
+        const card = normalizeCard(raw, clean.length), wordKey = card.word.toLocaleLowerCase("en-US");
+        if (!card.word || ids.has(card.id) || words.has(wordKey)) throw new Error("备份包含空单词或重复卡片");
+        if (!["new", "learning", "review"].includes(card.state) || ![card.due, card.interval, card.ease, card.reps, card.lapses, card.order].every(Number.isFinite) || card.interval < 0 || card.reps < 0 || card.lapses < 0) throw new Error("备份包含无效的复习进度");
+        ids.add(card.id); words.add(wordKey); clean.push(card);
+      }
+      const settings = { ...DEFAULT_SETTINGS, ...(backup.settings || {}) };
+      if (![10, 20, 30, 50].includes(Number(settings.newLimit)) || ![50, 100, 150, 200].includes(Number(settings.reviewLimit))) throw new Error("备份中的学习设置无效");
+      settings.newLimit = Number(settings.newLimit); settings.reviewLimit = Number(settings.reviewLimit); settings.autoSpeak = Boolean(settings.autoSpeak);
+      const activity = backup.activity && typeof backup.activity === "object" && !Array.isArray(backup.activity) ? backup.activity : {};
+      const placement = backup.placement || null, placementDraft = backup.placementDraft && Number(backup.placementDraft.answered) < PLACEMENT_QUESTIONS ? backup.placementDraft : null;
+      const tx = app.db.transaction([CARD_STORE, META_STORE], "readwrite"), store = tx.objectStore(CARD_STORE), meta = tx.objectStore(META_STORE); store.clear(); clean.forEach((card) => store.put(card));
+      const libraryName = String(backup.libraryName || "恢复的词库");
+      [["libraryName", libraryName], ["libraryVersion", backup.libraryVersion || null], ["settings", settings], ["activity", activity], ["placement", placement], ["placementDraft", placementDraft]].forEach(([key, value]) => meta.put({ key, value }));
+      await transactionDone(tx);
+      app.libraryName = libraryName; app.settings = settings; app.activity = activity; app.placement = placement; app.placementDraft = placementDraft; app.test = null; app.undo = null;
+      if (backup.theme === "light" || backup.theme === "dark") applyTheme(backup.theme);
+    }
     async function handleFile(file) {
       const text = await file.text();
-      if (file.name.toLowerCase().endsWith(".json")) { const backup = JSON.parse(text); if (!Array.isArray(backup.cards)) throw new Error("备份文件缺少 cards 数据"); await replaceDeck(backup.cards, backup.libraryName || "恢复的词库"); app.settings = { ...DEFAULT_SETTINGS, ...(backup.settings || {}) }; app.activity = backup.activity || {}; app.placement = backup.placement || null; await Promise.all([setMeta("settings", app.settings), setMeta("activity", app.activity), setMeta("placement", app.placement)]); }
+      if (file.name.toLowerCase().endsWith(".json")) { await restoreBackup(JSON.parse(text)); await ensureBundledLibrary(); }
       else await replaceDeck(parseCSV(text), file.name.replace(/\.csv$/i, ""));
       await startSession(); showToast(`已导入 ${(await allCards()).length} 个单词`);
     }
-    async function exportBackup() { const backup = { schemaVersion: 2, exportedAt: new Date().toISOString(), libraryName: app.libraryName, settings: app.settings, activity: app.activity, placement: app.placement, cards: await allCards() }, blob = new Blob([JSON.stringify(backup)], { type: "application/json" }), url = URL.createObjectURL(blob), link = document.createElement("a"); link.href = url; link.download = `vocab-coach-backup-${dayKey()}.json`; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); }
-    async function clearDeck() { if (!confirm("确定清空当前词库和全部学习记录吗？此操作无法撤销。")) return; const tx = app.db.transaction([CARD_STORE, META_STORE], "readwrite"); tx.objectStore(CARD_STORE).clear(); tx.objectStore(META_STORE).clear(); await transactionDone(tx); await seedDeck(); app.settings = { ...DEFAULT_SETTINGS }; app.activity = {}; app.placement = null; await startSession(); showToast("已恢复内置 20000 词库"); }
+    async function exportBackup() {
+      const backup = { schemaVersion: 3, exportedAt: new Date().toISOString(), libraryName: app.libraryName, libraryVersion: await getMeta("libraryVersion", null), theme: document.documentElement.dataset.theme, settings: app.settings, activity: app.activity, placement: app.placement, placementDraft: app.placementDraft, cards: await allCards() };
+      backup.integrity = { algorithm: "SHA-256", value: await backupChecksum(backup) };
+      const blob = new Blob([JSON.stringify(backup)], { type: "application/json" }), url = URL.createObjectURL(blob), link = document.createElement("a"); link.href = url; link.download = `vocab-coach-backup-${dayKey()}.json`; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); showToast("备份已保存并完成完整性校验");
+    }
+    async function clearDeck() { if (!confirm("确定清空当前词库和全部学习记录吗？此操作无法撤销。")) return; const tx = app.db.transaction([CARD_STORE, META_STORE], "readwrite"); tx.objectStore(CARD_STORE).clear(); tx.objectStore(META_STORE).clear(); await transactionDone(tx); await seedDeck(); app.settings = { ...DEFAULT_SETTINGS }; app.activity = {}; app.placement = null; app.placementDraft = null; app.test = null; await startSession(); showToast("已恢复内置 20000 词库"); }
     function applyTheme(theme) { document.documentElement.dataset.theme = theme; localStorage.setItem("vocabTheme", theme); }
+    function closeApp() { if ("speechSynthesis" in window) speechSynthesis.cancel(); $("settings-dialog").open && $("settings-dialog").close(); $("placement-dialog").open && $("placement-dialog").close(); $("app-shell").hidden = true; $("closed-screen").hidden = false; if (window.opener) window.close(); }
     function bindEvents() {
       $("flashcard").addEventListener("click", (event) => { if (event.target.closest("button") || !app.current) return; reveal(); });
       $("flashcard").addEventListener("keydown", (event) => { if ((event.key === "Enter" || event.key === " ") && !event.target.closest("button")) { event.preventDefault(); reveal(); } });
       ratingButtons.forEach((button) => button.addEventListener("click", () => rate(button.dataset.rating))); $("word-audio").addEventListener("click", () => speak(app.current?.word)); $("sentence-audio").addEventListener("click", () => speak(app.current?.example_en)); $("undo-button").addEventListener("click", undoRating); $("import-button").addEventListener("click", () => $("file-input").click());
       $("file-input").addEventListener("change", async (event) => { const file = event.target.files[0]; if (!file) return; try { await handleFile(file); } catch (error) { showToast(`导入失败：${error.message}`); } event.target.value = ""; });
-      $("export-button").addEventListener("click", exportBackup); $("reset-button").addEventListener("click", clearDeck); $("theme-button").addEventListener("click", () => applyTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark"));
-      $("placement-button").addEventListener("click", openPlacement); $("placement-cancel").addEventListener("click", () => $("placement-dialog").close()); $("start-placement").addEventListener("click", startPlacement); $("retest-placement").addEventListener("click", startPlacement); $("apply-placement").addEventListener("click", applyPlacement);
+      $("export-button").addEventListener("click", async () => { try { await exportBackup(); } catch (error) { showToast(`备份失败：${error.message}`); } }); $("reset-button").addEventListener("click", clearDeck); $("theme-button").addEventListener("click", () => applyTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark"));
+      $("placement-button").addEventListener("click", openPlacement); $("placement-cancel").addEventListener("click", exitPlacement); $("placement-close").addEventListener("click", exitPlacement); $("placement-test-exit").addEventListener("click", exitPlacement); $("start-placement").addEventListener("click", () => startPlacement(false)); $("retest-placement").addEventListener("click", () => startPlacement(true)); $("apply-placement").addEventListener("click", applyPlacement);
       $("settings-button").addEventListener("click", () => { $("new-limit").value = app.settings.newLimit; $("review-limit").value = app.settings.reviewLimit; $("auto-speak").checked = app.settings.autoSpeak; $("settings-dialog").showModal(); });
+      $("exit-button").addEventListener("click", closeApp); $("resume-button").addEventListener("click", () => { $("closed-screen").hidden = true; $("app-shell").hidden = false; });
       $("save-settings").addEventListener("click", async () => { app.settings = { newLimit: Number($("new-limit").value), reviewLimit: Number($("review-limit").value), autoSpeak: $("auto-speak").checked }; await setMeta("settings", app.settings); await startSession(); showToast("设置已保存"); });
       window.addEventListener("keydown", (event) => { if ($("settings-dialog").open || $("placement-dialog").open || event.target.matches("select, input")) return; if (event.code === "Space") { event.preventDefault(); reveal(); } else if (["1", "2", "3", "4"].includes(event.key)) rate(["again", "hard", "good", "easy"][Number(event.key) - 1]); else if (event.key.toLowerCase() === "s") speak(app.current?.word); else if (event.key.toLowerCase() === "d") speak(app.current?.example_en); });
     }
     async function init() {
       applyTheme(localStorage.getItem("vocabTheme") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")); bindEvents();
-      try { app.db = await openDatabase(); app.settings = { ...DEFAULT_SETTINGS, ...(await getMeta("settings", {})) }; app.activity = await getMeta("activity", {}); app.placement = await getMeta("placement", null); app.libraryName = await getMeta("libraryName", "内置示例词库"); if (!(await allCards()).length) await seedDeck(); await ensureBundledLibrary(); app.libraryName = await getMeta("libraryName", app.libraryName); app.activity = await getMeta("activity", app.activity); app.placement = await getMeta("placement", app.placement); await startSession(); }
+      try { app.db = await openDatabase(); app.settings = { ...DEFAULT_SETTINGS, ...(await getMeta("settings", {})) }; app.activity = await getMeta("activity", {}); app.placement = await getMeta("placement", null); app.placementDraft = await getMeta("placementDraft", null); app.libraryName = await getMeta("libraryName", "内置示例词库"); if (!(await allCards()).length) await seedDeck(); await ensureBundledLibrary(); app.libraryName = await getMeta("libraryName", app.libraryName); app.activity = await getMeta("activity", app.activity); app.placement = await getMeta("placement", app.placement); app.placementDraft = await getMeta("placementDraft", app.placementDraft); await startSession(); }
       catch (error) { $("front-word").textContent = "无法启动"; $("front-phonetic").textContent = error.message; showToast("浏览器存储不可用，请使用最新版 Chrome、Edge 或 Safari"); }
     }
     init();

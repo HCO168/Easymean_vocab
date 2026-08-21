@@ -28,6 +28,8 @@ UPDATE_FILES = (
     "update_vocab.py",
     "build_authentic_7000.py",
     "enrich_wiktionary_etymology.py",
+    "enrich_chinese_word_formation.py",
+    "enrich_tatoeba_examples.py",
     "apply_cefr_levels.py",
     "audit_vocabulary.py",
 )
@@ -99,8 +101,8 @@ def validate(files: dict[str, bytes]) -> None:
     if len(csv_text.splitlines()) < 20001:
         raise RuntimeError("词库数量校验失败")
 
-    ast.parse(files["start_vocab.py"].decode("utf-8"))
-    ast.parse(files["update_vocab.py"].decode("utf-8"))
+    for name in ("start_vocab.py", "update_vocab.py", "build_authentic_7000.py", "apply_cefr_levels.py", "enrich_wiktionary_etymology.py", "enrich_chinese_word_formation.py", "enrich_tatoeba_examples.py", "audit_vocabulary.py"):
+        ast.parse(files[name].decode("utf-8"))
 
 
 def install(files: dict[str, bytes]) -> None:
