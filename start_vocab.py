@@ -3,19 +3,20 @@
 
 from __future__ import annotations
 
-import contextlib
 import http.server
 import os
-import socket
 import sys
 import threading
+import urllib.error
+import urllib.request
 import webbrowser
 from pathlib import Path
 
 
 HOST = "127.0.0.1"
-PREFERRED_PORT = 8765
+PORT = 8765
 APP_FILE = "vocab_coach.html"
+APP_MARKER = b"vocab_coach_db"
 
 
 class QuietHandler(http.server.SimpleHTTPRequestHandler):
@@ -25,15 +26,14 @@ class QuietHandler(http.server.SimpleHTTPRequestHandler):
         pass
 
 
-def find_available_port(start: int, attempts: int = 20) -> int:
-    for port in range(start, start + attempts):
-        with contextlib.closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:
-            try:
-                sock.bind((HOST, port))
-            except OSError:
-                continue
-            return port
-    raise RuntimeError(f"找不到可用端口（已尝试 {start}–{start + attempts - 1}）")
+def app_is_already_running(url: str) -> bool:
+    """Recognize this app on the fixed origin without trusting any HTTP server."""
+    try:
+        request = urllib.request.Request(url, headers={"User-Agent": "Easymean_vocab-launcher/1.0"})
+        with urllib.request.urlopen(request, timeout=2) as response:
+            return response.status == 200 and APP_MARKER in response.read(256 * 1024)
+    except (OSError, urllib.error.URLError):
+        return False
 
 
 def main() -> int:
@@ -44,18 +44,23 @@ def main() -> int:
         return 1
 
     os.chdir(project_dir)
+    url = f"http://{HOST}:{PORT}/{APP_FILE}"
 
     try:
-        port = find_available_port(PREFERRED_PORT)
-        server = http.server.ThreadingHTTPServer((HOST, port), QuietHandler)
-    except (OSError, RuntimeError) as exc:
-        print(f"启动失败：{exc}")
+        server = http.server.ThreadingHTTPServer((HOST, PORT), QuietHandler)
+    except OSError as exc:
+        if app_is_already_running(url):
+            print("英语词汇学习已经在运行，正在打开原页面。")
+            print(f"地址：{url}")
+            webbrowser.open(url)
+            return 0
+        print(f"启动失败：固定端口 {PORT} 已被其他程序占用（{exc}）。")
+        print("为避免浏览器把新端口识别成另一份用户数据，应用不会自动更换端口。")
         return 1
 
     server_thread = threading.Thread(target=server.serve_forever, daemon=True)
     server_thread.start()
 
-    url = f"http://{HOST}:{port}/{APP_FILE}"
     print("英语词汇学习已启动")
     print(f"地址：{url}")
     print("浏览器没有自动打开时，请复制上面的地址。")
