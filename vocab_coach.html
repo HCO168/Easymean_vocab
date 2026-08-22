@@ -218,7 +218,7 @@
       <button class="dialog-close" id="placement-close" type="button" aria-label="关闭词汇定级">×</button>
       <section id="placement-intro">
         <h2>词汇 Placement Test</h2>
-        <p class="placement-copy">完成 18 道自适应词义题。答对后题目会变难，答错后会降低难度。测试完成后，新词只从你的同级和高一级中抽取。</p>
+        <p class="placement-copy">完成 18 道自适应词义题。答对后题目会变难，答错后会降低难度。最高档为 Beyond C1，该档题目和定级后的新词都只来自 Beyond C1 词池。</p>
         <p class="result-range" id="placement-saved-status" hidden></p>
         <p class="placement-source">难度依据：<a href="https://www.oxfordlearnersdictionaries.com/us/wordlists/oxford3000-5000" target="_blank" rel="noreferrer">American Oxford 3000/5000 CEFR 分级</a>。结果只反映词义识别能力，不是正式 CEFR 证书。</p>
         <div class="dialog-actions"><button class="quiet-button" id="placement-cancel" type="button">稍后再测</button><button class="primary-button" id="start-placement" type="button">开始测试</button></div>
@@ -250,7 +250,7 @@
     const DEFAULT_SETTINGS = { autoSpeak: false };
     const RATING_WORD_GAPS = { again: 8, hard: 20, good: 100, easy: 1000 };
     const LEVELS = ["A1", "A2", "B1", "B2", "C1", "Beyond C1"];
-    const TEST_LEVELS = ["A1", "A2", "B1", "B2", "C1"];
+    const TEST_LEVELS = LEVELS;
     const PLACEMENT_QUESTIONS = 18;
     const SAMPLE_WORDS = [
       { word: "collaborate", level: "B2", phonetic: "/kəˈlæbəreɪt/", pos: "vi.", meaning: "合作；协作", collocation: "collaborate with someone on something", etymology: "拉丁语 com-（共同）和 laborare（劳动）组合而来。", example_en: "We collaborated with a local team on the research.", example_zh: "我们与当地团队合作开展了这项研究。" },
@@ -457,7 +457,7 @@
       if (app.test.answering) return;
       app.test.answering = true; [...$("test-options").querySelectorAll("button")].forEach((button) => { button.disabled = true; });
       const difficulty = app.test.current.difficulty, probability = 1 / (1 + Math.exp(-(app.test.theta - difficulty)));
-      app.test.theta = Math.max(-.5, Math.min(4.5, app.test.theta + 1.15 * ((correct ? 1 : 0) - probability)));
+      app.test.theta = Math.max(-.5, Math.min(TEST_LEVELS.length - .5, app.test.theta + 1.15 * ((correct ? 1 : 0) - probability)));
       app.test.answered++; if (correct) app.test.correct++; if (unknown) app.test.unknown++; await persistPlacementDraft(); app.test.answering = false; nextPlacementQuestion();
     }
     async function finishPlacement() {
@@ -465,7 +465,9 @@
       app.test.result = { level, accuracy, correct: app.test.correct, unknown: app.test.unknown, theta: Number(app.test.theta.toFixed(2)), testedAt: new Date().toISOString(), source: "American Oxford 3000/5000" };
       app.placement = app.test.result; app.placementDraft = null; await Promise.all([setMeta("placement", app.placement), setMeta("placementDraft", null)]);
       $("result-level").textContent = level; $("result-summary").textContent = `答对 ${app.test.correct} / ${PLACEMENT_QUESTIONS} 题，不知道 ${app.test.unknown} 题，词义识别正确率 ${accuracy}%。结果已自动保存。`;
-      $("result-range").textContent = `推荐新词范围：${range.join(" 和 ")}。约 75% 来自同级，25% 来自高一级。已经学过的单词仍会按期复习。`;
+      $("result-range").textContent = range.length === 1
+        ? `推荐新词范围：${range[0]}。新词将 100% 来自 Beyond C1 词池；已经学过的单词仍按原有词距复习。`
+        : `推荐新词范围：${range.join(" 和 ")}。约 75% 来自同级，25% 来自高一级；已经学过的单词仍按原有词距复习。`;
       showPlacementView("result");
     }
     async function applyPlacement() {
