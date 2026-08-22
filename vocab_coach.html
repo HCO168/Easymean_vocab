@@ -218,7 +218,7 @@
       <button class="dialog-close" id="placement-close" type="button" aria-label="关闭词汇定级">×</button>
       <section id="placement-intro">
         <h2>词汇 Placement Test</h2>
-        <p class="placement-copy">完成 18 道自适应词义题。答对后题目会变难，答错后会降低难度。当前最高档为 C1；C2/Beyond C1 与未定级词暂不进入测试或测试选项。</p>
+        <p class="placement-copy">完成 18 道自适应词义题。答对后题目会变难，答错后会降低难度。最高档 C2/Beyond C1 使用约 75% 有明确来源的 C2 词和 25% C1 校准词；未定级词不进入测试或选项。</p>
         <p class="result-range" id="placement-saved-status" hidden></p>
         <p class="placement-source">难度依据：<a href="https://www.oxfordlearnersdictionaries.com/us/wordlists/oxford3000-5000" target="_blank" rel="noreferrer">American Oxford 3000/5000</a> 与 <a href="https://github.com/openlanguageprofiles/olp-en-cefrj" target="_blank" rel="noreferrer">Octanove C1/C2</a>。结果只反映词义识别能力，不是正式 CEFR 证书。</p>
         <div class="dialog-actions"><button class="quiet-button" id="placement-cancel" type="button">稍后再测</button><button class="primary-button" id="start-placement" type="button">开始测试</button></div>
@@ -249,8 +249,9 @@
     const LIBRARY_FILE = "us_core_7000_authentic.csv", LIBRARY_NAME = "ECDICT 高频 20000 + 多源 CEFR + 中文构词 + Tatoeba 例句", LIBRARY_VERSION = "20000-multisource-cefr-2026-08-v3";
     const DEFAULT_SETTINGS = { autoSpeak: false };
     const RATING_WORD_GAPS = { again: 8, hard: 20, good: 100, easy: 1000 };
+    const ADVANCED_C1_MIX = .25;
     const LEVELS = ["A1", "A2", "B1", "B2", "C1", "Beyond C1"];
-    const ACTIVE_LEVELS = LEVELS.slice(0, 5);
+    const ACTIVE_LEVELS = LEVELS;
     const TEST_LEVELS = ACTIVE_LEVELS;
     const PLACEMENT_QUESTIONS = 18;
     const SAMPLE_WORDS = [
@@ -331,9 +332,9 @@
       } catch (_) { return false; }
     }
     function learningLevels(level = app.placement?.level) {
-      const effectiveLevel = level === "Beyond C1" ? "C1" : level;
-      if (!effectiveLevel || !ACTIVE_LEVELS.includes(effectiveLevel)) return ACTIVE_LEVELS;
-      const index = ACTIVE_LEVELS.indexOf(effectiveLevel);
+      if (level === "Beyond C1") return ["Beyond C1", "C1"];
+      if (!level || !ACTIVE_LEVELS.includes(level)) return ACTIVE_LEVELS;
+      const index = ACTIVE_LEVELS.indexOf(level);
       return ACTIVE_LEVELS.slice(index, Math.min(index + 2, ACTIVE_LEVELS.length));
     }
     function todayActivity() { const key = dayKey(); if (!app.activity[key]) app.activity[key] = { ratings: 0, reviewed: 0, newStudied: 0 }; return app.activity[key]; }
@@ -353,7 +354,7 @@
       const available = app.deck.filter((card) => card.state !== "removed" && card.id !== excludeId);
       const due = available.filter((card) => card.state !== "new" && card.duePosition <= app.studyPosition).sort((a, b) => a.duePosition - b.duePosition || a.order - b.order);
       if (due.length) return randomFront(due, 6);
-      const fresh = available.filter((card) => card.state === "new" && card.level !== "Beyond C1"), allowed = learningLevels();
+      const fresh = available.filter((card) => card.state === "new"), allowed = learningLevels();
       let candidates = fresh;
       if (app.placement) {
         const same = fresh.filter((card) => card.level === allowed[0]), stretch = fresh.filter((card) => card.level === allowed[1]);
@@ -391,7 +392,7 @@
     function setDetail(id, value, fallback = "待可信来源补充") { const element = $(id); element.textContent = value || fallback; element.classList.toggle("missing", !value); }
     function render() {
       const card = $("flashcard"), remaining = app.deck.filter((item) => item.state !== "removed").length;
-      $("remaining-count").textContent = remaining; $("completed-count").textContent = app.completed; $("reviewed-count").textContent = todayActivity().reviewed; $("streak-count").textContent = calculateStreak(); $("placement-level").textContent = app.placement?.level === "Beyond C1" ? "C1（C2 暂停）" : app.placement?.level || (app.placementDraft ? `测试中 ${app.placementDraft.answered}/${PLACEMENT_QUESTIONS}` : "未测试"); $("data-source").textContent = app.placement ? `${app.libraryName} · ${learningLevels().join(" + ")}` : `${app.libraryName} · 尚未定级`; $("undo-button").disabled = !app.undo;
+      $("remaining-count").textContent = remaining; $("completed-count").textContent = app.completed; $("reviewed-count").textContent = todayActivity().reviewed; $("streak-count").textContent = calculateStreak(); $("placement-level").textContent = app.placement?.level === "Beyond C1" ? "Beyond C1（水平较高）" : app.placement?.level || (app.placementDraft ? `测试中 ${app.placementDraft.answered}/${PLACEMENT_QUESTIONS}` : "未测试"); $("data-source").textContent = app.placement ? `${app.libraryName} · ${learningLevels().join(" + ")}` : `${app.libraryName} · 尚未定级`; $("undo-button").disabled = !app.undo;
       if (!app.current) { card.dataset.empty = "true"; card.classList.remove("is-revealed"); card.removeAttribute("role"); card.removeAttribute("tabindex"); $("front-word").textContent = "学习列表为空"; $("front-phonetic").textContent = "可以导入新词库，或撤销刚才的操作"; $("reveal-hint").textContent = "没有设置每日学习上限"; ratingButtons.forEach((button) => button.disabled = true); return; }
       card.dataset.empty = "false"; card.setAttribute("role", "button"); card.setAttribute("tabindex", "0"); card.classList.toggle("is-revealed", app.revealed);
       $("front-word").textContent = app.current.word; $("front-phonetic").textContent = app.current.phonetic; $("front-level").textContent = app.current.level ? `${app.current.level_source || "CEFR"} 难度参考 ${app.current.level}` : "难度待补充"; $("back-word").textContent = app.current.word; $("back-phonetic").textContent = app.current.phonetic || "音标待补充"; $("back-pos").textContent = app.current.pos || "词性待补充"; $("back-meaning").textContent = app.current.meaning || "中文释义待补充";
@@ -443,15 +444,18 @@
     }
     function nextPlacementQuestion() {
       if (app.test.answered >= PLACEMENT_QUESTIONS) { finishPlacement(); return; }
-      const difficulty = Math.max(0, Math.min(TEST_LEVELS.length - 1, Math.round(app.test.theta))), level = TEST_LEVELS[difficulty];
+      const targetDifficulty = Math.max(0, Math.min(TEST_LEVELS.length - 1, Math.round(app.test.theta))), targetLevel = TEST_LEVELS[targetDifficulty];
+      const level = targetLevel === "Beyond C1" && Math.random() < ADVANCED_C1_MIX ? "C1" : targetLevel;
+      const difficulty = TEST_LEVELS.indexOf(level);
       let available = app.test.pools.get(level).filter((card) => !app.test.used.has(card.id));
       if (!available.length) available = app.test.pools.get(level);
       const question = available[Math.floor(Math.random() * available.length)];
       app.test.used.add(question.id); app.test.current = { question, difficulty };
-      const correctMeaning = shortMeaning(question), distractors = shuffle(app.test.pools.get(level)).map(shortMeaning).filter((meaning) => meaning && meaning !== correctMeaning).filter((meaning, index, list) => list.indexOf(meaning) === index).slice(0, 3);
+      const distractorCards = targetLevel === "Beyond C1" ? [...app.test.pools.get("Beyond C1"), ...app.test.pools.get("C1")] : app.test.pools.get(level);
+      const correctMeaning = shortMeaning(question), distractors = shuffle(distractorCards).map(shortMeaning).filter((meaning) => meaning && meaning !== correctMeaning).filter((meaning, index, list) => list.indexOf(meaning) === index).slice(0, 3);
       const options = shuffle([{ text: correctMeaning, correct: true }, ...distractors.map((text) => ({ text, correct: false }))]);
       $("test-progress").textContent = `第 ${app.test.answered + 1} / ${PLACEMENT_QUESTIONS} 题`;
-      $("test-level").textContent = `当前难度 ${level}`; $("test-word").textContent = question.word; $("test-options").replaceChildren();
+      $("test-level").textContent = targetLevel === "Beyond C1" ? `当前难度 C2 / Beyond C1${level === "C1" ? "（C1 校准题）" : ""}` : `当前难度 ${level}`; $("test-word").textContent = question.word; $("test-options").replaceChildren();
       options.forEach((option) => { const button = document.createElement("button"); button.type = "button"; button.className = "test-option"; button.textContent = option.text; button.addEventListener("click", () => answerPlacement(option.correct, false)); $("test-options").append(button); });
       const unknown = document.createElement("button"); unknown.type = "button"; unknown.className = "test-option unknown"; unknown.textContent = "不知道"; unknown.addEventListener("click", () => answerPlacement(false, true)); $("test-options").append(unknown);
     }
@@ -466,10 +470,12 @@
       const index = Math.max(0, Math.min(TEST_LEVELS.length - 1, Math.round(app.test.theta))), level = TEST_LEVELS[index], accuracy = Math.round(app.test.correct / PLACEMENT_QUESTIONS * 100), range = learningLevels(level);
       app.test.result = { level, accuracy, correct: app.test.correct, unknown: app.test.unknown, theta: Number(app.test.theta.toFixed(2)), testedAt: new Date().toISOString(), source: "Oxford 3000/5000 + CEFR-J 1.5 + Octanove C1/C2 1.0" };
       app.placement = app.test.result; app.placementDraft = null; await Promise.all([setMeta("placement", app.placement), setMeta("placementDraft", null)]);
-      $("result-level").textContent = level; $("result-summary").textContent = `答对 ${app.test.correct} / ${PLACEMENT_QUESTIONS} 题，不知道 ${app.test.unknown} 题，词义识别正确率 ${accuracy}%。结果已自动保存。`;
-      $("result-range").textContent = range.length === 1
-        ? `推荐新词范围：${range[0]}。新词将 100% 来自 ${range[0]} 词池；已经学过的单词仍按原有词距复习。`
-        : `推荐新词范围：${range.join(" 和 ")}。约 75% 来自同级，25% 来自高一级；已经学过的单词仍按原有词距复习。`;
+      $("result-level").textContent = level; $("result-summary").textContent = `答对 ${app.test.correct} / ${PLACEMENT_QUESTIONS} 题，不知道 ${app.test.unknown} 题，词义识别正确率 ${accuracy}%。结果已自动保存。${level === "Beyond C1" ? " 你的英语水平较高了。" : ""}`;
+      $("result-range").textContent = level === "Beyond C1"
+        ? "推荐新词范围：Beyond C1 和 C1。约 75% 来自有明确 C2 来源的 Beyond C1 词池，25% 来自 C1 巩固词；已经学过的单词仍按原有词距复习。"
+        : range.length === 1
+          ? `推荐新词范围：${range[0]}。新词将 100% 来自 ${range[0]} 词池；已经学过的单词仍按原有词距复习。`
+          : `推荐新词范围：${range.join(" 和 ")}。约 75% 来自同级，25% 来自高一级；已经学过的单词仍按原有词距复习。`;
       showPlacementView("result");
     }
     async function applyPlacement() {
