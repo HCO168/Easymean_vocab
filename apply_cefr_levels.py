@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Add Oxford American 3000/5000 CEFR guidance to the local study deck.
+"""Add conservative, source-backed CEFR guidance to the local study deck.
 
 Oxford aligns the American Oxford 3000 to A1-B2 and the additional Oxford
-5000 entries to B2-C1. Words outside those lists are labeled "Beyond C1"
-instead of being falsely classified as C2.
+5000 entries to B2-C1. CEFR-J fills gaps at A1-B2, and the Octanove C1/C2
+profile supplies explicit advanced labels. Unmatched words remain "Unrated"
+instead of being falsely classified as beyond C1.
 """
 
 from __future__ import annotations
@@ -27,7 +28,12 @@ PDF_URLS = (
     "https://www.oxfordlearnersdictionaries.com/external/pdf/wordlists/oxford-3000-5000/American_Oxford_3000_by_CEFR_level.pdf",
     "https://www.oxfordlearnersdictionaries.com/us/external/pdf/wordlists/oxford-3000-5000/American_Oxford_5000_by_CEFR_level.pdf",
 )
-LEVEL_ORDER = {"A1": 0, "A2": 1, "B1": 2, "B2": 3, "C1": 4}
+CEFRJ_URL = "https://raw.githubusercontent.com/openlanguageprofiles/olp-en-cefrj/master/cefrj-vocabulary-profile-1.5.csv"
+OCTANOVE_URL = "https://raw.githubusercontent.com/openlanguageprofiles/olp-en-cefrj/master/octanove-vocabulary-profile-c1c2-1.0.csv"
+LEVEL_ORDER = {"A1": 0, "A2": 1, "B1": 2, "B2": 3, "C1": 4, "Beyond C1": 5}
+SOURCE_OXFORD = "Oxford 3000/5000"
+SOURCE_CEFRJ = "CEFR-J Wordlist 1.5"
+SOURCE_OCTANOVE = "Octanove C1/C2 1.0"
 POS_MARKER = re.compile(
     r"^(.+?)\s+(?:indefinite article|ordinal number|number|modal v\.|auxiliary v\.|"
     r"definite article|n\.|v[.,]|adj\.|adv\.|prep\.|conj\.|pron\.|det\.|exclam\.|art\.)",
@@ -71,13 +77,33 @@ def parse_pdf(data: bytes) -> list[tuple[str, str]]:
     return entries
 
 
-def build_level_map() -> dict[str, str]:
-    mapping: dict[str, str] = {}
+def parse_profile_csv(data: bytes, source: str) -> list[tuple[str, str, str]]:
+    entries: list[tuple[str, str, str]] = []
+    reader = csv.DictReader(io.StringIO(data.decode("utf-8-sig")))
+    for row in reader:
+        raw_level = row.get("CEFR", "").strip().upper()
+        level = "Beyond C1" if raw_level == "C2" else raw_level
+        if level not in LEVEL_ORDER:
+            continue
+        headword = re.sub(r"\s*\([^)]*\)", "", row.get("headword", ""))
+        for variant in re.split(r"\s*[/,]\s*", headword):
+            word = variant.strip().casefold()
+            if word:
+                entries.append((word, level, source))
+    return entries
+
+
+def build_level_map() -> dict[str, tuple[str, str]]:
+    mapping: dict[str, tuple[str, str]] = {}
     for url in PDF_URLS:
         for word, level in parse_pdf(download(url)):
             current = mapping.get(word)
-            if current is None or LEVEL_ORDER[level] < LEVEL_ORDER[current]:
-                mapping[word] = level
+            if current is None or LEVEL_ORDER[level] < LEVEL_ORDER[current[0]]:
+                mapping[word] = (level, SOURCE_OXFORD)
+    for url, source in ((CEFRJ_URL, SOURCE_CEFRJ), (OCTANOVE_URL, SOURCE_OCTANOVE)):
+        for word, level, entry_source in parse_profile_csv(download(url), source):
+            if word not in mapping:
+                mapping[word] = (level, entry_source)
     return mapping
 
 
@@ -92,12 +118,16 @@ def apply_levels(input_path: Path, output_path: Path) -> tuple[int, int, dict[st
     if "level" not in fields:
         meaning_index = fields.index("meaning") if "meaning" in fields else len(fields) - 1
         fields.insert(meaning_index + 1, "level")
+    if "level_source" not in fields:
+        fields.insert(fields.index("level") + 1, "level_source")
+    if "placement_eligible" not in fields:
+        fields.insert(fields.index("level_source") + 1, "placement_eligible")
 
-    counts = {level: 0 for level in (*LEVEL_ORDER, "Beyond C1")}
+    counts = {level: 0 for level in (*LEVEL_ORDER, "Unrated")}
     matched = 0
-    aliases = {"the": "A1", "these": "A1", "those": "A1"}
+    aliases = {"the": ("A1", SOURCE_OXFORD), "these": ("A1", SOURCE_OXFORD), "those": ("A1", SOURCE_OXFORD)}
 
-    def inferred_level(row: dict[str, str]) -> str:
+    def inferred_level(row: dict[str, str]) -> tuple[str, str]:
         word = row.get("word", "").strip().casefold()
         if word in mapping:
             return mapping[word]
@@ -126,13 +156,15 @@ def apply_levels(input_path: Path, output_path: Path) -> tuple[int, int, dict[st
         for candidate in candidates:
             if candidate in mapping:
                 return mapping[candidate]
-        return "Beyond C1"
+        return "Unrated", "No match in Oxford, CEFR-J, or Octanove"
 
     for row in rows:
-        level = inferred_level(row)
+        level, source = inferred_level(row)
         row["level"] = level
+        row["level_source"] = source
+        row["placement_eligible"] = "true" if source in {SOURCE_OXFORD, SOURCE_OCTANOVE} else "false"
         counts[level] += 1
-        matched += level != "Beyond C1"
+        matched += level != "Unrated"
 
     temporary = output_path.with_suffix(output_path.suffix + ".tmp")
     with temporary.open("w", encoding="utf-8-sig", newline="") as handle:
@@ -156,7 +188,7 @@ def main() -> int:
     except Exception as exc:
         print(f"Leveling failed: {exc}", file=sys.stderr)
         return 1
-    print(f"Wrote CEFR guidance for {total} words; Oxford list matches: {matched}.")
+    print(f"Wrote source-backed CEFR guidance for {total} words; classified: {matched}.")
     print("Level counts: " + ", ".join(f"{key}={value}" for key, value in counts.items()))
     return 0
 

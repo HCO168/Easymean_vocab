@@ -51,7 +51,7 @@ python3 start_vocab.py
 
 ## Placement Test 与分级学习
 
-点击“词汇定级”可以完成 18 道自适应词义题。测试从 B1 难度开始，依次覆盖 A1、A2、B1、B2、C1 和 Beyond C1；答对后提高下一题难度，答错或选择“不知道”后降低难度。能力值使用逐题更新的 logistic 概率模型，不用固定正确率直接套级别。进入 Beyond C1 难度后，题目与干扰项均只从 Beyond C1 词池中选择。
+点击“词汇定级”可以完成 18 道自适应词义题。测试从 B1 难度开始，依次覆盖 A1、A2、B1、B2、C1 和 Beyond C1；答对后提高下一题难度，答错或选择“不知道”后降低难度。能力值使用逐题更新的 logistic 概率模型，不用固定正确率直接套级别。定级题与普通学习词分开筛选：A1-B2 使用 Oxford 核心词，C1 使用 Oxford 与 Octanove C1 核心词，Beyond C1 只使用 Octanove 明确标为 C2 的词；CEFR-J 单独补充的主题词和未定级词不会进入测试。进入 Beyond C1 难度后，题目与干扰项均只从 Beyond C1 测试词池中选择。
 
 每道题作答后，能力值、答题数、正确数、“不知道”数和已用词都会立即写入 IndexedDB。测试中退出或关闭页面后，侧栏会显示已完成题数，下次可继续；第 18 题完成时结果会自动保存，不依赖额外确认按钮。设置和定级弹窗均有可见关闭按钮，测试页另有“退出测试（自动保存进度）”。
 
@@ -59,7 +59,7 @@ python3 start_vocab.py
 
 - Oxford 3000：A1-B2；
 - Oxford 5000 新增词：B2-C1；
-- 不在两份表中的高频词标为 `Beyond C1`，而不是没有依据地标成 C2。
+- Oxford 未覆盖的词先用 CEFR-J 补足 A1-B2，再用 Octanove 补足 C1-C2；只有 Octanove 明确标为 C2 的词才映射为 `Beyond C1`，其余未匹配词保持 `Unrated`。
 
 测试结果是词义识别能力估算，不是正式 CEFR 认证。正式 placement test 通常还会测试阅读、听力、语法和语言运用。
 
@@ -96,7 +96,7 @@ python3 start_vocab.py
 文件使用 UTF-8 with BOM，标准表头如下：
 
 ```csv
-word,base_word,phonetic,pos,meaning,level,collocation,etymology,etymology_source,etymology_license,example_en,example_zh,example_source,example_license
+word,base_word,phonetic,pos,meaning,level,level_source,placement_eligible,collocation,etymology,etymology_source,etymology_license,example_en,example_zh,example_source,example_license
 ```
 
 应用的解析器支持 RFC 4180 常用格式，包括：
@@ -110,11 +110,13 @@ word,base_word,phonetic,pos,meaning,level,collocation,etymology,etymology_source
 
 导入时按不区分大小写的 `word` 去重。资料缺失不会被模板文字自动填满，卡片会明确显示“待可信来源补充”。
 
-`base_word` 用于让 `supposed`、`works` 等词形继承基础词的级别；`level` 可以是 `A1`、`A2`、`B1`、`B2`、`C1` 或 `Beyond C1`。
+`base_word` 用于让 `supposed`、`works` 等词形继承基础词的级别；`level` 可以是 `A1`、`A2`、`B1`、`B2`、`C1`、`Beyond C1` 或 `Unrated`。`level_source` 记录具体判定来源，`placement_eligible` 则把普通学习词与适合能力测试的核心词分开。
 
 ## 词库质量策略
 
 默认词库的词频、音标、词性和中文释义来自开源 ECDICT。构建器按 `frq` 当代语料频率顺序选出 20,000 个合法英文词条。只有词典释义明确写出 `vt.` 或 `vi.` 时才保留及物性标记；没有依据时只标为 `v.`，不会猜测。
+
+难度采用保守的多源合并：Oxford 3000/5000 优先，CEFR-J Wordlist 1.5 只补充未匹配的 A1-B2 词，Octanove Vocabulary Profile 1.0 再补充 C1-C2。CEFR-J 数据归东京外国语大学投野研究室所有，可在正确署名下免费用于研究和商业用途；Octanove C1/C2 数据采用 CC BY-SA 4.0。没有任何来源明确分级的词保留为 `Unrated`，不会因为“不在 Oxford 核心词表”就自动升级为 Beyond C1。
 
 构词短注优先使用 MIT 许可的 engra 结构化词根关系，生成 `reform / re-form；re-：重新、再次；form：形式、组成；reform：改革、改正。` 这类中文记忆说明。没有可靠拆解时，只把 Wiktionary 中能明确识别的来源语言压缩成中文短句；无法确定就留空，不猜词根。
 
@@ -146,7 +148,7 @@ python3 audit_vocabulary.py us_core_7000_authentic.csv
 
 审计内容包括：
 
-- 学习字段、`base_word`、`level`、构词与例句来源及许可证；
+- 学习字段、`base_word`、`level`、`level_source`、`placement_eligible`、构词与例句来源及许可证；
 - 空单词与重复单词；
 - 每个字段的有效覆盖率；
 - 音标是否只是原词加斜杠；
@@ -158,7 +160,9 @@ python3 audit_vocabulary.py us_core_7000_authentic.csv
 - 中文释义覆盖率 100%；
 - 音标覆盖率约 95.0%；
 - 词性覆盖率约 77.4%；
-- 6,235 个词直接或通过基础词匹配 Oxford A1-C1；
+- 9,696 个词获得多源 CEFR 分级，10,304 个词保守地保持未定级；
+- Beyond C1 从原先错误兜底的 13,765 个缩减为 548 个有明确 Octanove C2 证据的词；
+- 定级测试池为 A1 1,130、A2 1,036、B1 854、B2 1,565、C1 2,130、Beyond C1 548 个核心词；
 - 中文构词或来源短注覆盖 13,677 个词，约 68.4%；
 - 可溯源 Tatoeba 双语例句覆盖 4,831 个词，约 24.2%；
 - 所有非空构词和例句均附来源页面与许可证；

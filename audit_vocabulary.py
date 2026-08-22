@@ -11,7 +11,7 @@ from collections import Counter
 from pathlib import Path
 
 
-REQUIRED = {"word", "phonetic", "pos", "meaning", "collocation", "etymology", "etymology_source", "etymology_license", "example_en", "example_zh", "example_source", "example_license"}
+REQUIRED = {"word", "phonetic", "pos", "meaning", "level", "level_source", "placement_eligible", "collocation", "etymology", "etymology_source", "etymology_license", "example_en", "example_zh", "example_source", "example_license"}
 GENERIC_PATTERNS = {
     "meaning": re.compile(r"^(常用核心词|核心常用词|高频日常核心词|日常核心词|核心高频词)$"),
     "collocation": re.compile(r"^(use|apply|take)\s+", re.I),
