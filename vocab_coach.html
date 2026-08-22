@@ -78,13 +78,14 @@
     .example-en { font-size: 16px !important; }
     .example-zh { margin-top: 6px !important; color: var(--muted); }
     .quality-note { font-size: 12px; color: var(--muted); }
-    .ratings { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; background: var(--bg); }
+    .ratings { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; background: var(--bg); }
     .rating { min-height: 62px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); cursor: pointer; display: grid; place-content: center; gap: 3px; font-weight: 800; }
     .rating span { font-size: 11px; color: var(--muted); font-weight: 500; }
     .rating:hover:not(:disabled) { border-color: var(--accent); background: var(--accent-soft); }
     .rating.again { color: var(--danger); }
     .rating.hard { color: var(--warning); }
     .rating.good, .rating.easy { color: var(--accent); }
+    .rating.remove { color: var(--muted); }
     .footer { min-height: 48px; display: flex; justify-content: space-between; align-items: center; gap: 16px; border-top: 1px solid var(--line); padding-top: 16px; }
     .shortcuts { color: var(--muted); font-size: 12px; }
     .toast { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 16px); max-width: min(520px, calc(100% - 32px)); padding: 11px 15px; border-radius: 10px; background: var(--text); color: var(--surface); opacity: 0; pointer-events: none; transition: opacity .2s ease, transform .2s ease; box-shadow: var(--shadow); font-size: 14px; z-index: 10; }
@@ -150,7 +151,7 @@
 <body>
   <main class="app" id="app-shell">
     <header class="topbar">
-      <div class="brand"><h1>英语词汇学习</h1><span>每天只学今天该学的</span></div>
+      <div class="brand"><h1>英语词汇学习</h1><span>按你的记忆节奏持续学习</span></div>
       <div class="top-actions">
         <button class="quiet-button" id="theme-button" type="button" aria-label="切换明暗主题">主题</button>
         <button class="quiet-button" id="placement-button" type="button">词汇定级</button>
@@ -161,15 +162,15 @@
       </div>
     </header>
     <div class="workspace">
-      <aside class="sidebar" aria-label="今日学习概况">
-        <div><p class="session-title">今日剩余</p><p class="session-count"><span id="remaining-count">0</span> <small>张</small></p></div>
+      <aside class="sidebar" aria-label="学习概况">
+        <div><p class="session-title">学习列表</p><p class="session-count"><span id="remaining-count">0</span> <small>词</small></p></div>
         <dl class="stat-list">
           <div class="stat-row"><dt>已完成</dt><dd id="completed-count">0</dd></div>
           <div class="stat-row"><dt>今日复习</dt><dd id="reviewed-count">0</dd></div>
           <div class="stat-row"><dt>连续学习</dt><dd><span id="streak-count">0</span> 天</dd></div>
           <div class="stat-row"><dt>当前定级</dt><dd id="placement-level">未测试</dd></div>
         </dl>
-        <p class="session-note">先回忆，再翻面。评级只决定下一次出现的时间，不代表考试成绩。</p>
+        <p class="session-note">先回忆，再翻面。1-4 决定大约经过多少个词后再见，5 将单词移出学习列表。</p>
       </aside>
       <section class="study" aria-live="polite">
         <div class="status-line"><span class="data-source" id="data-source">正在准备词库</span><button class="quiet-button" id="undo-button" type="button" disabled>撤销上次评级</button></div>
@@ -190,16 +191,17 @@
           </div>
           <div class="reveal-hint" id="reveal-hint">点击卡片或按空格查看答案</div>
         </article>
-        <div class="ratings" aria-label="记忆评级">
-          <button class="rating again" data-rating="again" type="button" disabled>重来<span>1 · 本轮再见</span></button>
-          <button class="rating hard" data-rating="hard" type="button" disabled>困难<span>2 · 较早复习</span></button>
-          <button class="rating good" data-rating="good" type="button" disabled>记得<span>3 · 正常间隔</span></button>
-          <button class="rating easy" data-rating="easy" type="button" disabled>熟练<span>4 · 延长间隔</span></button>
+        <div class="ratings" aria-label="学习操作">
+          <button class="rating again" data-rating="again" type="button" disabled>重来<span>1 · 约 8 词后</span></button>
+          <button class="rating hard" data-rating="hard" type="button" disabled>困难<span>2 · 约 20 词后</span></button>
+          <button class="rating good" data-rating="good" type="button" disabled>记得<span>3 · 约 100 词后</span></button>
+          <button class="rating easy" data-rating="easy" type="button" disabled>熟练<span>4 · 约 1000 词后</span></button>
+          <button class="rating remove" data-rating="remove" type="button" disabled>移出<span>5 · 不再出现</span></button>
         </div>
       </section>
     </div>
     <footer class="footer">
-      <span class="shortcuts">空格翻面　1-4 评级　S 读词　D 读句</span>
+      <span class="shortcuts">空格翻面　1-4 排期　5 移出学习列表　S 读词　D 读句</span>
       <div class="footer-actions"><button class="quiet-button" id="export-button" type="button">备份进度</button><button class="quiet-button" id="reset-button" type="button">清空词库</button></div>
     </footer>
   </main>
@@ -207,8 +209,6 @@
     <form class="dialog-inner" method="dialog">
       <button class="dialog-close" value="cancel" type="submit" aria-label="关闭设置">×</button>
       <h2>学习设置</h2>
-      <div class="field"><label for="new-limit">每天新学单词</label><select id="new-limit"><option>10</option><option selected>20</option><option>30</option><option>50</option></select></div>
-      <div class="field"><label for="review-limit">每天最多复习</label><select id="review-limit"><option>50</option><option selected>100</option><option>150</option><option>200</option></select></div>
       <label class="check-row"><input id="auto-speak" type="checkbox"> 新卡出现时自动读词</label>
       <div class="dialog-actions"><button class="quiet-button" value="cancel" type="submit">取消</button><button class="primary-button" id="save-settings" value="default" type="submit">保存</button></div>
     </form>
@@ -245,9 +245,10 @@
   <div class="toast" id="toast" role="status"></div>
   <script>
     "use strict";
-    const DB_NAME = "vocab_coach_db", DB_VERSION = 1, CARD_STORE = "cards", META_STORE = "meta", DAY_MS = 86_400_000;
+    const DB_NAME = "vocab_coach_db", DB_VERSION = 1, CARD_STORE = "cards", META_STORE = "meta";
     const LIBRARY_FILE = "us_core_7000_authentic.csv", LIBRARY_NAME = "ECDICT 高频 20000 + 中文构词 + Tatoeba 例句", LIBRARY_VERSION = "20000-zh-formation-tatoeba-2026-08-v2";
-    const DEFAULT_SETTINGS = { newLimit: 20, reviewLimit: 100, autoSpeak: false };
+    const DEFAULT_SETTINGS = { autoSpeak: false };
+    const RATING_WORD_GAPS = { again: 8, hard: 20, good: 100, easy: 1000 };
     const LEVELS = ["A1", "A2", "B1", "B2", "C1", "Beyond C1"];
     const TEST_LEVELS = ["A1", "A2", "B1", "B2", "C1"];
     const PLACEMENT_QUESTIONS = 18;
@@ -257,11 +258,10 @@
       { word: "schedule", level: "B1", phonetic: "/ˈskedʒuːl/", pos: "n./vt.", meaning: "日程；时间表；安排", collocation: "ahead of schedule", etymology: "源自晚期拉丁语 schedula，原指一小张纸。", example_en: "The train arrived right on schedule.", example_zh: "火车准点到达。" },
       { word: "maintain", level: "B2", phonetic: "/meɪnˈteɪn/", pos: "vt.", meaning: "维持；保养；坚持认为", collocation: "maintain high standards", etymology: "源自拉丁语 manu tenere，字面含义是用手握住。", example_en: "Regular exercise helps maintain your energy level.", example_zh: "规律锻炼有助于维持精力。" }
     ];
-    const app = { db: null, settings: { ...DEFAULT_SETTINGS }, activity: {}, placement: null, placementDraft: null, test: null, libraryName: "示例词库", current: null, queue: [], revealed: false, completed: 0, undo: null, sessionSeen: new Map(), toastTimer: null };
+    const app = { db: null, settings: { ...DEFAULT_SETTINGS }, activity: {}, placement: null, placementDraft: null, test: null, libraryName: "示例词库", current: null, deck: [], studyPosition: 0, revealed: false, completed: 0, undo: null, toastTimer: null };
     const $ = (id) => document.getElementById(id);
     const ratingButtons = [...document.querySelectorAll("[data-rating]")];
     function dayKey(date = new Date()) { return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`; }
-    const addDays = (timestamp, days) => timestamp + days * DAY_MS;
     function openDatabase() {
       return new Promise((resolve, reject) => {
         const request = indexedDB.open(DB_NAME, DB_VERSION);
@@ -282,15 +282,15 @@
     async function putCard(card) { const tx = app.db.transaction(CARD_STORE, "readwrite"); tx.objectStore(CARD_STORE).put(card); await transactionDone(tx); }
     function normalizeCard(raw, index = 0) {
       const word = String(raw.word || "").trim();
-      return { id: String(raw.id || `${word.toLocaleLowerCase("en-US")}::${index}`), word, base_word: String(raw.base_word || word).trim(), level: LEVELS.includes(raw.level) ? raw.level : "", phonetic: String(raw.phonetic || "").trim(), pos: String(raw.pos || "").trim(), meaning: String(raw.meaning || "").trim(), collocation: String(raw.collocation || "").trim(), etymology: String(raw.etymology || "").trim(), etymology_source: String(raw.etymology_source || "").trim(), etymology_license: String(raw.etymology_license || "").trim(), example_en: String(raw.example_en || "").trim(), example_zh: String(raw.example_zh || "").trim(), example_source: String(raw.example_source || "").trim(), example_license: String(raw.example_license || "").trim(), state: raw.state || "new", due: Number(raw.due || 0), interval: Number(raw.interval || 0), ease: Number(raw.ease || 2.5), reps: Number(raw.reps || 0), lapses: Number(raw.lapses || 0), lastReviewed: raw.lastReviewed || null, order: Number.isFinite(Number(raw.order)) ? Number(raw.order) : index };
+      return { id: String(raw.id || `${word.toLocaleLowerCase("en-US")}::${index}`), word, base_word: String(raw.base_word || word).trim(), level: LEVELS.includes(raw.level) ? raw.level : "", phonetic: String(raw.phonetic || "").trim(), pos: String(raw.pos || "").trim(), meaning: String(raw.meaning || "").trim(), collocation: String(raw.collocation || "").trim(), etymology: String(raw.etymology || "").trim(), etymology_source: String(raw.etymology_source || "").trim(), etymology_license: String(raw.etymology_license || "").trim(), example_en: String(raw.example_en || "").trim(), example_zh: String(raw.example_zh || "").trim(), example_source: String(raw.example_source || "").trim(), example_license: String(raw.example_license || "").trim(), state: raw.state || "new", due: Number(raw.due || 0), duePosition: Number(raw.duePosition || 0), interval: Number(raw.interval || 0), ease: Number(raw.ease || 2.5), reps: Number(raw.reps || 0), lapses: Number(raw.lapses || 0), lastReviewed: raw.lastReviewed || null, removedAt: raw.removedAt || null, order: Number.isFinite(Number(raw.order)) ? Number(raw.order) : index };
     }
     async function replaceDeck(rows, name) {
       const clean = [], seen = new Set();
       for (const raw of rows) { const word = String(raw.word || "").trim(), key = word.toLocaleLowerCase("en-US"); if (!word || seen.has(key)) continue; seen.add(key); clean.push(normalizeCard(raw, clean.length)); }
       if (!clean.length) throw new Error("词库中没有可识别的 word 字段");
       const tx = app.db.transaction([CARD_STORE, META_STORE], "readwrite"), store = tx.objectStore(CARD_STORE); store.clear(); clean.forEach((card) => store.put(card));
-      const meta = tx.objectStore(META_STORE); meta.put({ key: "libraryName", value: name }); meta.put({ key: "libraryVersion", value: null }); meta.put({ key: "activity", value: {} }); meta.put({ key: "placement", value: null }); meta.put({ key: "placementDraft", value: null }); await transactionDone(tx);
-      app.libraryName = name; app.activity = {}; app.placement = null; app.placementDraft = null; app.undo = null; return clean.length;
+      const meta = tx.objectStore(META_STORE); meta.put({ key: "libraryName", value: name }); meta.put({ key: "libraryVersion", value: null }); meta.put({ key: "activity", value: {} }); meta.put({ key: "placement", value: null }); meta.put({ key: "placementDraft", value: null }); meta.put({ key: "studyPosition", value: 0 }); await transactionDone(tx);
+      app.libraryName = name; app.activity = {}; app.placement = null; app.placementDraft = null; app.studyPosition = 0; app.undo = null; return clean.length;
     }
     function parseCSV(text) {
       const rows = []; let row = [], field = "", quoted = false;
@@ -316,11 +316,11 @@
         const sourceRows = parseCSV(await response.text());
         if (sourceRows.length < 20000) return false;
         const existing = new Map(cards.map((card) => [card.word.toLocaleLowerCase("en-US"), card]));
-        const progressFields = ["id", "state", "due", "interval", "ease", "reps", "lapses", "lastReviewed"];
+        const progressFields = ["id", "state", "due", "duePosition", "interval", "ease", "reps", "lapses", "lastReviewed", "removedAt"];
         const tx = app.db.transaction([CARD_STORE, META_STORE], "readwrite"), store = tx.objectStore(CARD_STORE);
         sourceRows.forEach((row, index) => {
           const incoming = normalizeCard(row, index), previous = existing.get(incoming.word.toLocaleLowerCase("en-US"));
-          if (previous) progressFields.forEach((field) => { incoming[field] = previous[field]; });
+          if (previous) progressFields.forEach((field) => { if (previous[field] !== undefined) incoming[field] = previous[field]; });
           store.put(incoming);
         });
         const meta = tx.objectStore(META_STORE); meta.put({ key: "libraryName", value: LIBRARY_NAME }); meta.put({ key: "libraryVersion", value: LIBRARY_VERSION });
@@ -336,46 +336,61 @@
     }
     function todayActivity() { const key = dayKey(); if (!app.activity[key]) app.activity[key] = { ratings: 0, reviewed: 0, newStudied: 0 }; return app.activity[key]; }
     function calculateStreak() { let streak = 0; const date = new Date(); if (!app.activity[dayKey(date)]?.ratings) date.setDate(date.getDate() - 1); while (app.activity[dayKey(date)]?.ratings) { streak++; date.setDate(date.getDate() - 1); } return streak; }
-    async function startSession() {
-      const cards = await allCards(), now = Date.now(), activity = todayActivity();
-      const due = cards.filter((card) => card.state !== "new" && card.due <= now).sort((a, b) => a.due - b.due).slice(0, app.settings.reviewLimit);
-      const allowance = Math.max(0, app.settings.newLimit - activity.newStudied), allowed = learningLevels();
-      let fresh;
-      if (app.placement) {
-        const same = cards.filter((card) => card.state === "new" && card.level === allowed[0]).sort((a, b) => a.order - b.order);
-        const stretch = cards.filter((card) => card.state === "new" && card.level === allowed[1]).sort((a, b) => a.order - b.order);
-        const sameCount = Math.min(same.length, Math.ceil(allowance * .75));
-        fresh = [...same.slice(0, sameCount), ...stretch.slice(0, allowance - sameCount)];
-        if (fresh.length < allowance) fresh.push(...same.slice(sameCount, sameCount + allowance - fresh.length));
-      } else {
-        fresh = cards.filter((card) => card.state === "new").sort((a, b) => a.order - b.order).slice(0, allowance);
-      }
-      app.queue = [...due, ...fresh]; app.current = app.queue.shift() || null; app.completed = 0; app.revealed = false; app.sessionSeen.clear(); render();
+    function randomFront(values, windowSize) {
+      if (!values.length) return null;
+      return values[Math.floor(Math.random() * Math.min(windowSize, values.length))];
     }
-    function nextIntervals(card) { const base = Math.max(1, card.interval || 1); return { again: "本轮再见", hard: `${Math.max(1, Math.round(base * 1.2))} 天`, good: `${card.reps ? Math.max(1, Math.round(base * card.ease)) : 1} 天`, easy: `${card.reps ? Math.max(2, Math.round(base * card.ease * 1.3)) : 4} 天` }; }
-    function scheduleCard(card, rating) {
-      const now = Date.now(), updated = { ...card, reps: card.reps + 1, lastReviewed: new Date(now).toISOString(), state: "review" };
-      if (rating === "again") { updated.interval = 0; updated.due = now + 10 * 60_000; updated.ease = Math.max(1.3, card.ease - .2); updated.lapses = card.lapses + 1; updated.state = "learning"; }
-      else if (rating === "hard") { updated.interval = Math.max(1, Math.round((card.interval || 1) * 1.2)); updated.due = addDays(now, updated.interval); updated.ease = Math.max(1.3, card.ease - .15); }
-      else if (rating === "good") { updated.interval = card.reps ? Math.max(1, Math.round(Math.max(1, card.interval) * card.ease)) : 1; updated.due = addDays(now, updated.interval); }
-      else { updated.interval = card.reps ? Math.max(2, Math.round(Math.max(1, card.interval) * card.ease * 1.3)) : 4; updated.due = addDays(now, updated.interval); updated.ease = Math.min(3.2, card.ease + .15); }
+    function gaussianWordGap(mean) {
+      let first = 0, second = 0;
+      while (!first) first = Math.random();
+      while (!second) second = Math.random();
+      const standardNormal = Math.sqrt(-2 * Math.log(first)) * Math.cos(2 * Math.PI * second);
+      return Math.max(1, Math.round(mean + standardNormal * mean * .1));
+    }
+    function pickNextCard(excludeId = null) {
+      const available = app.deck.filter((card) => card.state !== "removed" && card.id !== excludeId);
+      const due = available.filter((card) => card.state !== "new" && card.duePosition <= app.studyPosition).sort((a, b) => a.duePosition - b.duePosition || a.order - b.order);
+      if (due.length) return randomFront(due, 6);
+      const fresh = available.filter((card) => card.state === "new"), allowed = learningLevels();
+      let candidates = fresh;
+      if (app.placement) {
+        const same = fresh.filter((card) => card.level === allowed[0]), stretch = fresh.filter((card) => card.level === allowed[1]);
+        candidates = Math.random() < .75 ? same : stretch;
+        if (!candidates.length) candidates = same.length ? same : stretch;
+      }
+      if (candidates.length) return randomFront(candidates.sort((a, b) => a.order - b.order), 32);
+      const future = available.filter((card) => card.state !== "new").sort((a, b) => a.duePosition - b.duePosition || a.order - b.order);
+      return randomFront(future, 3);
+    }
+    async function startSession() {
+      app.deck = (await allCards()).map((card, index) => normalizeCard(card, index)); app.current = pickNextCard(); app.completed = 0; app.revealed = false; render();
+    }
+    function nextIntervals() { return { again: "约 8 词后", hard: "约 20 词后", good: "约 100 词后", easy: "约 1000 词后", remove: "不再出现" }; }
+    function scheduleCard(card, rating, gap = 0) {
+      const now = Date.now();
+      if (rating === "remove") return { ...card, state: "removed", duePosition: 0, removedAt: new Date(now).toISOString(), lastReviewed: new Date(now).toISOString() };
+      const updated = { ...card, reps: card.reps + 1, lastReviewed: new Date(now).toISOString(), removedAt: null, state: rating === "again" ? "learning" : "review", due: 0, duePosition: app.studyPosition + gap + 1, interval: gap };
+      if (rating === "again") updated.lapses = card.lapses + 1;
       return updated;
     }
     async function rate(rating) {
-      if (!app.current) return;
-      const original = structuredClone(app.current), queueBefore = structuredClone(app.queue), activityBefore = structuredClone(app.activity), sessionSeenBefore = new Map(app.sessionSeen), wasNew = original.state === "new", updated = scheduleCard(original, rating);
-      await putCard(updated); const activity = todayActivity(); activity.ratings++; activity.reviewed++; if (wasNew) activity.newStudied++; await setMeta("activity", app.activity);
-      const seen = (app.sessionSeen.get(original.id) || 0) + 1; app.sessionSeen.set(original.id, seen);
-      if (rating === "again") app.queue.splice(Math.min(2, app.queue.length), 0, updated); if (rating === "hard" && seen < 2) app.queue.splice(Math.min(5, app.queue.length), 0, updated);
-      app.undo = { original, queueBefore, activityBefore, sessionSeenBefore, current: original, completed: app.completed }; app.completed++; app.current = app.queue.shift() || null; app.revealed = false; render(); if (app.settings.autoSpeak && app.current) speak(app.current.word);
+      if (!app.current || !(rating in { again: 1, hard: 1, good: 1, easy: 1, remove: 1 })) return;
+      const original = structuredClone(app.current), activityBefore = structuredClone(app.activity), positionBefore = app.studyPosition, wasNew = original.state === "new";
+      const gap = rating === "remove" ? 0 : gaussianWordGap(RATING_WORD_GAPS[rating]), updated = scheduleCard(original, rating, gap);
+      await putCard(updated); app.deck = app.deck.map((card) => card.id === updated.id ? updated : card);
+      const activity = todayActivity(); activity.ratings++; activity.reviewed++; if (wasNew) activity.newStudied++;
+      app.studyPosition++; await Promise.all([setMeta("activity", app.activity), setMeta("studyPosition", app.studyPosition)]);
+      app.undo = { original, activityBefore, positionBefore, current: original, completed: app.completed }; app.completed++; app.current = pickNextCard(original.id); app.revealed = false; render();
+      if (rating === "remove") showToast(`${original.word} 已移出学习列表`); else showToast(`${original.word} 将在约 ${gap} 个词后出现`);
+      if (app.settings.autoSpeak && app.current) speak(app.current.word);
     }
-    async function undoRating() { if (!app.undo) return; await putCard(app.undo.original); app.activity = app.undo.activityBefore; await setMeta("activity", app.activity); app.queue = app.undo.queueBefore; app.current = app.undo.current; app.completed = app.undo.completed; app.sessionSeen = app.undo.sessionSeenBefore; app.revealed = false; app.undo = null; render(); showToast("已撤销上次评级"); }
+    async function undoRating() { if (!app.undo) return; await putCard(app.undo.original); app.deck = app.deck.map((card) => card.id === app.undo.original.id ? app.undo.original : card); app.activity = app.undo.activityBefore; app.studyPosition = app.undo.positionBefore; await Promise.all([setMeta("activity", app.activity), setMeta("studyPosition", app.studyPosition)]); app.current = app.undo.current; app.completed = app.undo.completed; app.revealed = false; app.undo = null; render(); showToast("已撤销上次评级"); }
     function reveal() { if (!app.current || app.revealed) return; app.revealed = true; render(); }
     function setDetail(id, value, fallback = "待可信来源补充") { const element = $(id); element.textContent = value || fallback; element.classList.toggle("missing", !value); }
     function render() {
-      const card = $("flashcard"), remaining = app.queue.length + (app.current ? 1 : 0);
+      const card = $("flashcard"), remaining = app.deck.filter((item) => item.state !== "removed").length;
       $("remaining-count").textContent = remaining; $("completed-count").textContent = app.completed; $("reviewed-count").textContent = todayActivity().reviewed; $("streak-count").textContent = calculateStreak(); $("placement-level").textContent = app.placement?.level || (app.placementDraft ? `测试中 ${app.placementDraft.answered}/${PLACEMENT_QUESTIONS}` : "未测试"); $("data-source").textContent = app.placement ? `${app.libraryName} · ${learningLevels().join(" + ")}` : `${app.libraryName} · 尚未定级`; $("undo-button").disabled = !app.undo;
-      if (!app.current) { card.dataset.empty = "true"; card.classList.remove("is-revealed"); card.removeAttribute("role"); card.removeAttribute("tabindex"); $("front-word").textContent = "今日完成"; $("front-phonetic").textContent = "下一批内容会在到期后自动出现"; $("reveal-hint").textContent = "你可以休息，或在设置中增加每日新词数量"; ratingButtons.forEach((button) => button.disabled = true); return; }
+      if (!app.current) { card.dataset.empty = "true"; card.classList.remove("is-revealed"); card.removeAttribute("role"); card.removeAttribute("tabindex"); $("front-word").textContent = "学习列表为空"; $("front-phonetic").textContent = "可以导入新词库，或撤销刚才的操作"; $("reveal-hint").textContent = "没有设置每日学习上限"; ratingButtons.forEach((button) => button.disabled = true); return; }
       card.dataset.empty = "false"; card.setAttribute("role", "button"); card.setAttribute("tabindex", "0"); card.classList.toggle("is-revealed", app.revealed);
       $("front-word").textContent = app.current.word; $("front-phonetic").textContent = app.current.phonetic; $("front-level").textContent = app.current.level ? `Oxford 难度参考 ${app.current.level}` : "难度待补充"; $("back-word").textContent = app.current.word; $("back-phonetic").textContent = app.current.phonetic || "音标待补充"; $("back-pos").textContent = app.current.pos || "词性待补充"; $("back-meaning").textContent = app.current.meaning || "中文释义待补充";
       setDetail("back-collocation", app.current.collocation); setDetail("back-etymology", app.current.etymology); setDetail("back-example-en", app.current.example_en); setDetail("back-example-zh", app.current.example_zh, "");
@@ -383,7 +398,7 @@
       const exampleLink = $("back-example-source"); exampleLink.hidden = !app.current.example_source; exampleLink.href = app.current.example_source || "#"; exampleLink.title = app.current.example_license ? `来源许可：${app.current.example_license}` : "";
       const missing = [app.current.phonetic, app.current.pos, app.current.meaning, app.current.collocation, app.current.etymology, app.current.example_en].filter((value) => !value).length;
       $("quality-note").textContent = missing ? `本词条有 ${missing} 项资料尚未经过可信来源验证。` : "本词条资料完整。"; $("reveal-hint").textContent = app.revealed ? "根据真实回忆难度评级" : "可直接评级，也可点击卡片查看答案";
-      const intervals = nextIntervals(app.current), keys = { again: "1", hard: "2", good: "3", easy: "4" };
+      const intervals = nextIntervals(), keys = { again: "1", hard: "2", good: "3", easy: "4", remove: "5" };
       ratingButtons.forEach((button) => { button.disabled = false; button.querySelector("span").textContent = `${keys[button.dataset.rating]} · ${intervals[button.dataset.rating]}`; }); $("sentence-audio").disabled = !app.current.example_en;
     }
     function shortMeaning(card) {
@@ -469,7 +484,7 @@
     function validPlacement(value) { return value === null || (value && TEST_LEVELS.includes(value.level) && Number.isFinite(Number(value.theta))); }
     function validPlacementDraft(value) { return value === null || (value && Number.isFinite(Number(value.theta)) && Number.isInteger(Number(value.answered)) && Number(value.answered) >= 0 && Number(value.answered) < PLACEMENT_QUESTIONS && Number.isInteger(Number(value.correct)) && Number(value.correct) >= 0 && Number(value.correct) <= Number(value.answered) && Number.isInteger(Number(value.unknown || 0)) && Number(value.unknown || 0) >= 0 && Number(value.unknown || 0) <= Number(value.answered) && Array.isArray(value.used) && value.used.length <= PLACEMENT_QUESTIONS); }
     async function restoreBackup(backup) {
-      if (!backup || ![2, 3].includes(Number(backup.schemaVersion)) || !Array.isArray(backup.cards) || !backup.cards.length || backup.cards.length > 100000) throw new Error("备份格式或卡片数量无效");
+      if (!backup || ![2, 3, 4].includes(Number(backup.schemaVersion)) || !Array.isArray(backup.cards) || !backup.cards.length || backup.cards.length > 100000) throw new Error("备份格式或卡片数量无效");
       if (backup.integrity) {
         if (backup.integrity.algorithm !== "SHA-256" || backup.integrity.value !== await backupChecksum(backup)) throw new Error("备份完整性校验失败，文件可能不完整或已损坏");
       }
@@ -479,19 +494,19 @@
       for (const raw of backup.cards) {
         const card = normalizeCard(raw, clean.length), wordKey = card.word.toLocaleLowerCase("en-US");
         if (!card.word || ids.has(card.id) || words.has(wordKey)) throw new Error("备份包含空单词或重复卡片");
-        if (!["new", "learning", "review"].includes(card.state) || ![card.due, card.interval, card.ease, card.reps, card.lapses, card.order].every(Number.isFinite) || card.interval < 0 || card.reps < 0 || card.lapses < 0) throw new Error("备份包含无效的复习进度");
+        if (!["new", "learning", "review", "removed"].includes(card.state) || ![card.due, card.duePosition, card.interval, card.ease, card.reps, card.lapses, card.order].every(Number.isFinite) || card.duePosition < 0 || card.interval < 0 || card.reps < 0 || card.lapses < 0) throw new Error("备份包含无效的复习进度");
         ids.add(card.id); words.add(wordKey); clean.push(card);
       }
       const settings = { ...DEFAULT_SETTINGS, ...(backup.settings || {}) };
-      if (![10, 20, 30, 50].includes(Number(settings.newLimit)) || ![50, 100, 150, 200].includes(Number(settings.reviewLimit))) throw new Error("备份中的学习设置无效");
-      settings.newLimit = Number(settings.newLimit); settings.reviewLimit = Number(settings.reviewLimit); settings.autoSpeak = Boolean(settings.autoSpeak);
+      settings.autoSpeak = Boolean(settings.autoSpeak); delete settings.newLimit; delete settings.reviewLimit;
       const activity = backup.activity && typeof backup.activity === "object" && !Array.isArray(backup.activity) ? backup.activity : {};
       const placement = backup.placement || null, placementDraft = backup.placementDraft && Number(backup.placementDraft.answered) < PLACEMENT_QUESTIONS ? backup.placementDraft : null;
+      const studyPosition = Number.isFinite(Number(backup.studyPosition)) && Number(backup.studyPosition) >= 0 ? Math.floor(Number(backup.studyPosition)) : 0;
       const tx = app.db.transaction([CARD_STORE, META_STORE], "readwrite"), store = tx.objectStore(CARD_STORE), meta = tx.objectStore(META_STORE); store.clear(); clean.forEach((card) => store.put(card));
       const libraryName = String(backup.libraryName || "恢复的词库");
-      [["libraryName", libraryName], ["libraryVersion", backup.libraryVersion || null], ["settings", settings], ["activity", activity], ["placement", placement], ["placementDraft", placementDraft]].forEach(([key, value]) => meta.put({ key, value }));
+      [["libraryName", libraryName], ["libraryVersion", backup.libraryVersion || null], ["settings", settings], ["activity", activity], ["placement", placement], ["placementDraft", placementDraft], ["studyPosition", studyPosition]].forEach(([key, value]) => meta.put({ key, value }));
       await transactionDone(tx);
-      app.libraryName = libraryName; app.settings = settings; app.activity = activity; app.placement = placement; app.placementDraft = placementDraft; app.test = null; app.undo = null;
+      app.libraryName = libraryName; app.settings = settings; app.activity = activity; app.placement = placement; app.placementDraft = placementDraft; app.studyPosition = studyPosition; app.test = null; app.undo = null;
       if (backup.theme === "light" || backup.theme === "dark") applyTheme(backup.theme);
     }
     async function handleFile(file) {
@@ -501,11 +516,11 @@
       await startSession(); showToast(`已导入 ${(await allCards()).length} 个单词`);
     }
     async function exportBackup() {
-      const backup = { schemaVersion: 3, exportedAt: new Date().toISOString(), libraryName: app.libraryName, libraryVersion: await getMeta("libraryVersion", null), theme: document.documentElement.dataset.theme, settings: app.settings, activity: app.activity, placement: app.placement, placementDraft: app.placementDraft, cards: await allCards() };
+      const backup = { schemaVersion: 4, exportedAt: new Date().toISOString(), libraryName: app.libraryName, libraryVersion: await getMeta("libraryVersion", null), theme: document.documentElement.dataset.theme, settings: app.settings, activity: app.activity, placement: app.placement, placementDraft: app.placementDraft, studyPosition: app.studyPosition, cards: await allCards() };
       backup.integrity = { algorithm: "SHA-256", value: await backupChecksum(backup) };
       const blob = new Blob([JSON.stringify(backup)], { type: "application/json" }), url = URL.createObjectURL(blob), link = document.createElement("a"); link.href = url; link.download = `vocab-coach-backup-${dayKey()}.json`; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); showToast("备份已保存并完成完整性校验");
     }
-    async function clearDeck() { if (!confirm("确定清空当前词库和全部学习记录吗？此操作无法撤销。")) return; const tx = app.db.transaction([CARD_STORE, META_STORE], "readwrite"); tx.objectStore(CARD_STORE).clear(); tx.objectStore(META_STORE).clear(); await transactionDone(tx); await seedDeck(); app.settings = { ...DEFAULT_SETTINGS }; app.activity = {}; app.placement = null; app.placementDraft = null; app.test = null; await startSession(); showToast("已恢复内置 20000 词库"); }
+    async function clearDeck() { if (!confirm("确定清空当前词库和全部学习记录吗？此操作无法撤销。")) return; const tx = app.db.transaction([CARD_STORE, META_STORE], "readwrite"); tx.objectStore(CARD_STORE).clear(); tx.objectStore(META_STORE).clear(); await transactionDone(tx); await seedDeck(); app.settings = { ...DEFAULT_SETTINGS }; app.activity = {}; app.placement = null; app.placementDraft = null; app.studyPosition = 0; app.test = null; await startSession(); showToast("已恢复内置 20000 词库"); }
     function applyTheme(theme) { document.documentElement.dataset.theme = theme; localStorage.setItem("vocabTheme", theme); }
     function closeApp() { if ("speechSynthesis" in window) speechSynthesis.cancel(); $("settings-dialog").open && $("settings-dialog").close(); $("placement-dialog").open && $("placement-dialog").close(); $("app-shell").hidden = true; $("closed-screen").hidden = false; if (window.opener) window.close(); }
     function bindEvents() {
@@ -515,14 +530,14 @@
       $("file-input").addEventListener("change", async (event) => { const file = event.target.files[0]; if (!file) return; try { await handleFile(file); } catch (error) { showToast(`导入失败：${error.message}`); } event.target.value = ""; });
       $("export-button").addEventListener("click", async () => { try { await exportBackup(); } catch (error) { showToast(`备份失败：${error.message}`); } }); $("reset-button").addEventListener("click", clearDeck); $("theme-button").addEventListener("click", () => applyTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark"));
       $("placement-button").addEventListener("click", openPlacement); $("placement-cancel").addEventListener("click", exitPlacement); $("placement-close").addEventListener("click", exitPlacement); $("placement-test-exit").addEventListener("click", exitPlacement); $("start-placement").addEventListener("click", () => startPlacement(false)); $("retest-placement").addEventListener("click", () => startPlacement(true)); $("apply-placement").addEventListener("click", applyPlacement);
-      $("settings-button").addEventListener("click", () => { $("new-limit").value = app.settings.newLimit; $("review-limit").value = app.settings.reviewLimit; $("auto-speak").checked = app.settings.autoSpeak; $("settings-dialog").showModal(); });
+      $("settings-button").addEventListener("click", () => { $("auto-speak").checked = app.settings.autoSpeak; $("settings-dialog").showModal(); });
       $("exit-button").addEventListener("click", closeApp); $("resume-button").addEventListener("click", () => { $("closed-screen").hidden = true; $("app-shell").hidden = false; });
-      $("save-settings").addEventListener("click", async () => { app.settings = { newLimit: Number($("new-limit").value), reviewLimit: Number($("review-limit").value), autoSpeak: $("auto-speak").checked }; await setMeta("settings", app.settings); await startSession(); showToast("设置已保存"); });
-      window.addEventListener("keydown", (event) => { if ($("settings-dialog").open || $("placement-dialog").open || event.target.matches("select, input")) return; if (event.code === "Space") { event.preventDefault(); reveal(); } else if (["1", "2", "3", "4"].includes(event.key)) rate(["again", "hard", "good", "easy"][Number(event.key) - 1]); else if (event.key.toLowerCase() === "s") speak(app.current?.word); else if (event.key.toLowerCase() === "d") speak(app.current?.example_en); });
+      $("save-settings").addEventListener("click", async () => { app.settings = { autoSpeak: $("auto-speak").checked }; await setMeta("settings", app.settings); await startSession(); showToast("设置已保存"); });
+      window.addEventListener("keydown", (event) => { if ($("settings-dialog").open || $("placement-dialog").open || event.target.matches("select, input")) return; if (event.code === "Space") { event.preventDefault(); reveal(); } else if (["1", "2", "3", "4", "5"].includes(event.key)) rate(["again", "hard", "good", "easy", "remove"][Number(event.key) - 1]); else if (event.key.toLowerCase() === "s") speak(app.current?.word); else if (event.key.toLowerCase() === "d") speak(app.current?.example_en); });
     }
     async function init() {
       applyTheme(localStorage.getItem("vocabTheme") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")); bindEvents();
-      try { app.db = await openDatabase(); app.settings = { ...DEFAULT_SETTINGS, ...(await getMeta("settings", {})) }; app.activity = await getMeta("activity", {}); app.placement = await getMeta("placement", null); app.placementDraft = await getMeta("placementDraft", null); app.libraryName = await getMeta("libraryName", "内置示例词库"); if (!(await allCards()).length) await seedDeck(); await ensureBundledLibrary(); app.libraryName = await getMeta("libraryName", app.libraryName); app.activity = await getMeta("activity", app.activity); app.placement = await getMeta("placement", app.placement); app.placementDraft = await getMeta("placementDraft", app.placementDraft); await startSession(); }
+      try { app.db = await openDatabase(); app.settings = { ...DEFAULT_SETTINGS, ...(await getMeta("settings", {})) }; delete app.settings.newLimit; delete app.settings.reviewLimit; app.activity = await getMeta("activity", {}); app.placement = await getMeta("placement", null); app.placementDraft = await getMeta("placementDraft", null); app.studyPosition = Math.max(0, Number(await getMeta("studyPosition", 0)) || 0); app.libraryName = await getMeta("libraryName", "内置示例词库"); if (!(await allCards()).length) await seedDeck(); await ensureBundledLibrary(); app.libraryName = await getMeta("libraryName", app.libraryName); app.activity = await getMeta("activity", app.activity); app.placement = await getMeta("placement", app.placement); app.placementDraft = await getMeta("placementDraft", app.placementDraft); app.studyPosition = Math.max(0, Number(await getMeta("studyPosition", app.studyPosition)) || 0); await startSession(); }
       catch (error) { $("front-word").textContent = "无法启动"; $("front-phonetic").textContent = error.message; showToast("浏览器存储不可用，请使用最新版 Chrome、Edge 或 Safari"); }
     }
     init();
