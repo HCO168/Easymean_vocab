@@ -58,7 +58,7 @@ def compact_text(text: str, word: str) -> str:
 
 def stream_etymologies(url: str, targets: set[str]) -> tuple[dict[str, list[str]], str]:
     found: dict[str, list[str]] = defaultdict(list)
-    request = urllib.request.Request(url, headers={"User-Agent": "Easymean_vocab-builder/1.0"})
+    request = urllib.request.Request(url, headers={"User-Agent": "MeanEase-builder/1.0"})
     processed = 0
     next_report = 256 * 1024 * 1024
     with urllib.request.urlopen(request, timeout=120) as response:

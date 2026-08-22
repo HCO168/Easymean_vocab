@@ -20,7 +20,7 @@ UNSUITABLE = re.compile(r"\b(?:suicide|kill(?:ed|ing|s)?|murder(?:ed|ing|s)?|por
 
 
 def download_pairs(url: str) -> list[tuple[str, str, str]]:
-    request = urllib.request.Request(url, headers={"User-Agent": "Easymean_vocab-builder/1.0"})
+    request = urllib.request.Request(url, headers={"User-Agent": "MeanEase-builder/1.0"})
     with urllib.request.urlopen(request, timeout=90) as response:
         archive = response.read()
     with zipfile.ZipFile(io.BytesIO(archive)) as package:

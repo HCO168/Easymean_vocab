@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Update Easymean_vocab from Git or the latest GitHub archive."""
+"""Update MeanEase from Git or the latest GitHub archive."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ from pathlib import Path, PurePosixPath
 
 
 ROOT = Path(__file__).resolve().parent
-ARCHIVE_URL = "https://github.com/HCO168/Easymean_vocab/archive/refs/heads/main.zip"
+ARCHIVE_URL = "https://github.com/HCO168/MeanEase/archive/refs/heads/main.zip"
 MAX_ARCHIVE_BYTES = 30 * 1024 * 1024
 UPDATE_FILES = (
     "README.md",
@@ -57,7 +57,7 @@ def update_with_git():
 def download_archive() -> bytes:
     request = urllib.request.Request(
         ARCHIVE_URL,
-        headers={"User-Agent": "Easymean_vocab-updater/1.0"},
+        headers={"User-Agent": "MeanEase-updater/1.0"},
     )
     with urllib.request.urlopen(request, timeout=30) as response:
         length = response.headers.get("Content-Length")

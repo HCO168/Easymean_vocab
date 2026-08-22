@@ -115,7 +115,7 @@ def extract_root_glosses(files: dict[str, bytes]) -> dict[str, str]:
 
 
 def download_engra(url: str) -> tuple[dict[str, str], dict[str, str], dict[str, str]]:
-    request = urllib.request.Request(url, headers={"User-Agent": "Easymean_vocab-builder/1.0"})
+    request = urllib.request.Request(url, headers={"User-Agent": "MeanEase-builder/1.0"})
     with urllib.request.urlopen(request, timeout=90) as response:
         archive = response.read()
     with zipfile.ZipFile(io.BytesIO(archive)) as package:

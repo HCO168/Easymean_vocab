@@ -29,7 +29,7 @@ class QuietHandler(http.server.SimpleHTTPRequestHandler):
 def app_is_already_running(url: str) -> bool:
     """Recognize this app on the fixed origin without trusting any HTTP server."""
     try:
-        request = urllib.request.Request(url, headers={"User-Agent": "Easymean_vocab-launcher/1.0"})
+        request = urllib.request.Request(url, headers={"User-Agent": "MeanEase-launcher/1.0"})
         with urllib.request.urlopen(request, timeout=2) as response:
             return response.status == 200 and APP_MARKER in response.read(256 * 1024)
     except (OSError, urllib.error.URLError):
